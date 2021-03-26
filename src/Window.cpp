@@ -53,7 +53,7 @@ ParticleSys* Window::particle_sys;
 bool Window::initializeProgram() {
 
 	// Create a shader program with a vertex shader and a fragment shader.
-	shaderProgram = LoadShaders("shaders/shader.vert", "shaders/shader.frag");
+	shaderProgram = LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
 
 	// Check the shader program.
 	if (!shaderProgram)
@@ -71,10 +71,10 @@ bool Window::initializeObjects()
 	//cube = new Cube();
 
 	// Create a skin and its skeleton, pass in files for parsing
-	skin = new Skin("animations/wasp/wasp.skin", "animations/wasp/wasp.skel");
+	skin = new Skin("src/animations/wasp/wasp.skin", "src/animations/wasp/wasp.skel");
 
 	clip = new AnimationClip();
-	clip->Load("animations/wasp/wasp_walk.anim");
+	clip->Load("src/animations/wasp/wasp_walk.anim");
 	player = new AnimationPlayer(clip, skin->getSkeleton());
 
 	// Added 3 more dofs in the front for movement of 
@@ -212,9 +212,9 @@ void Window::idleCallback()
 	//cube->update();
 	
 	// Update the skin 
-	//skin->Update(glm::mat4(1.0f));
+	skin->Update(glm::mat4(1.0f));
 	// Update AnimationPlayer for skin
-	//player->Update(dt / CLOCKS_PER_SEC);
+	player->Update(dt / CLOCKS_PER_SEC);
 
 	// Update Cloth
 	int tot_steps = 60;
@@ -233,10 +233,10 @@ void Window::displayCallback(GLFWwindow* window)
 	//cube->draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
 
 	// Render skin
-	//skin->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
+	skin->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
 
-	the_floor->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
-	cloth->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
+	//the_floor->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
+	//cloth->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
 	//particle_sys->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
 
 	// Gets events, including input such as keyboard and mouse or window resizing.
