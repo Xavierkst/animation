@@ -8,11 +8,15 @@ Skeleton joint construction, and rigging system is applied to construct the wasp
 
 - Skeleton joint transformations, skin vertex interpolation, and smooth-skin algos are applied onto the model as part of the rigging process
 
+[Wasp Motionless](https://github.com/Xavierkst/animation/blob/master/gifs/wasp_motionless_edited.gif)
+
 ### Animation Player 
 
 - Time steps can be passed into `AnimationPlayer` class, that also supports different extrapolation methods for keyframes and channels as seen in `Keyframe` and `Channel` classes
 
 - `.skin`, `.skeleton`, and `.anim` files are parsed using a `Tokenizer` class
+
+[Wasp Animation](https://github.com/Xavierkst/animation/blob/master/gifs/wasp_animation_edited.gif)
 
 ### Cloth Simulation
 
@@ -21,6 +25,8 @@ Skeleton joint construction, and rigging system is applied to construct the wasp
 - WASD and CX keys to translate cloth along XZ plane, and up / down.
 
 - Rotation allowed along the cloth's Y-axis
+
+[cloth simulation](https://github.com/Xavierkst/animation/blob/master/gifs/Cloth_demonstration_edited_2.gif)
 
 ### General Particle simulation
 
@@ -31,3 +37,5 @@ Skeleton joint construction, and rigging system is applied to construct the wasp
 - Particles can increase in size, causing drag force to also increase
 
 - collision elasticity can be toggled as well
+
+[Particle Simulation (sped-up 2x)](https://github.com/Xavierkst/animation/blob/master/gifs/Particle_sim_demonstration_2.gif)
