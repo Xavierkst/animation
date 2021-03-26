@@ -1,8 +1,6 @@
 #ifndef _DOF_H_
 #define _DOF_H_
 
-//#include "core.h"
-
 class Dof {
 private:
 	float value; // defaulted

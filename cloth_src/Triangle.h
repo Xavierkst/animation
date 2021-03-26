@@ -1,8 +1,8 @@
 #ifndef _TRIANGLE_H_
 #define _TRIANGLE_H_
 
-#include "core.h"
-#include "Particle.h"
+#include "../core.h"
+#include "../Particle.h"
 
 // a class that holds triangle 
 class Triangle {

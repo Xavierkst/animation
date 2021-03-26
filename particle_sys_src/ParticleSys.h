@@ -1,9 +1,9 @@
 #ifndef _PARTICLE_SYS_H_
 #define PARTICLE_SYS_H_
 
-#include "Particle.h"
-#include "Core.h"
-#include "FloorTile.h"
+#include "../Particle.h"
+#include "../Core.h"
+#include "../FloorTile.h"
 
 class ParticleSys {
 private:

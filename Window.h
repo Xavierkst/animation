@@ -2,16 +2,16 @@
 #define _WINDOW_H_
 
 #include "main.h"
-//#include "Cube.h"
 #include "shader.h"
 #include "Camera.h"
-#include "Skin.h"
+#include "rigging_src/Skin.h"
 #include <glm/gtx/string_cast.hpp>
-#include "AnimationPlayer.h"
-#include "Cloth.h"
+#include "rigging_src/AnimationPlayer.h"
+#include "cloth_src/Cloth.h"
 #include "FloorTile.h"
-#include "ParticleSys.h"
+#include "particle_sys_src/ParticleSys.h"
 #include <time.h>
+
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"

@@ -4,7 +4,7 @@
 #include "SpringDamper.h"
 #include "Triangle.h"
 #include "stdlib.h"
-#include "FloorTile.h"
+#include "../FloorTile.h"
 
 class Cloth {
 private:

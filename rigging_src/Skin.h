@@ -1,7 +1,7 @@
 #ifndef _Skin_H_
 #define _Skin_H_
 
-#include "Triangle.h"
+#include "../cloth_src/Triangle.h"
 #include "Vertex.h"
 #include "Skeleton.h"
 #include <iostream>

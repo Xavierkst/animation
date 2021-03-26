@@ -1,7 +1,7 @@
 #ifndef _KEYFRAME_H_
 #define _KEYFRAME_H_
 
-#include "core.h"
+#include "../core.h"
 #include <string>
 
 class Keyframe {

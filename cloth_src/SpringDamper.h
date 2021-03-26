@@ -1,7 +1,7 @@
 #ifndef _SPRING_DAMPER_H_
 #define _SPRING_DAMPER_H_
 
-#include "Particle.h"
+#include "../Particle.h"
 
 class SpringDamper {
 private:

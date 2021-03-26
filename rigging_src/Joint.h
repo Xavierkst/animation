@@ -2,7 +2,7 @@
 #define _JOINT_H_
 
 #include "Dof.h"
-#include "Tokenizer.h"
+#include "../Tokenizer.h"
 #include "Cube.h"
 #include <string>
 

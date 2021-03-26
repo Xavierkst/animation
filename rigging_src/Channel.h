@@ -2,7 +2,7 @@
 #define _CHANNEL_H_
 
 #include "Keyframe.h"
-#include "Tokenizer.h"
+#include "../Tokenizer.h"
 #include <iostream>
 class Channel {
 private:
