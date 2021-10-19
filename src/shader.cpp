@@ -1,8 +1,6 @@
 #include "shader.h"
 
-enum ShaderType { vertex, fragment };
-
-GLuint LoadSingleShader(const char * shaderFilePath, ShaderType type) 
+GLuint Shader::LoadSingleShader(const char * shaderFilePath, ShaderType type) 
 {
 	// Create a shader id.
 	GLuint shaderID = 0;
@@ -61,7 +59,7 @@ GLuint LoadSingleShader(const char * shaderFilePath, ShaderType type)
 	return shaderID;
 }
 
-GLuint LoadShaders(const char * vertexFilePath, const char * fragmentFilePath) 
+GLuint Shader::LoadShaders(const char * vertexFilePath, const char * fragmentFilePath) 
 {
 	// Create the vertex shader and fragment shader.
 	GLuint vertexShaderID = LoadSingleShader(vertexFilePath, vertex);
@@ -104,4 +102,59 @@ GLuint LoadShaders(const char * vertexFilePath, const char * fragmentFilePath)
 	glDeleteShader(fragmentShaderID);
 
 	return programID;
+}
+
+void Shader::setBool(const std::string& name, bool value)
+{
+	glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+}
+
+void Shader::setInt(const std::string& name, int value)
+{
+	glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+}
+
+void Shader::setFloat(const std::string& name, float value)
+{
+	glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+}
+
+void Shader::setVec3(const std::string& name, glm::vec3 value)
+{
+	glUniform3f(glGetUniformLocation(ID, name.c_str()), value.x, value.y, value.z);
+}
+
+void Shader::setVec4(const std::string& name, glm::vec4 value)
+{
+	glUniform4f(glGetUniformLocation(ID, name.c_str()), value.x, value.y, value.z, value.w);
+}
+
+void Shader::setMat4(const std::string& name, glm::mat4 value)
+{
+	glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+void Shader::use()
+{
+	glUseProgram(ID);
+}
+
+void Shader::checkCompileErrors(unsigned int ID, std::string type)
+{
+	GLint success;
+	char infoLog[1024];
+	if (type != "PROGRAM") {
+		glGetShaderiv(ID, GL_COMPILE_STATUS, &success);
+		if (!success) {
+			glGetShaderInfoLog(ID, 1024, NULL, infoLog);
+			std::cout << "ERROR::SHADER::VERTEX::ERROR of type: " << type << "\n" << infoLog << std::endl;
+		}
+	} 
+	else {
+		glGetProgramiv(ID, GL_LINK_STATUS, &success);
+		if (!success) {
+			glGetProgramInfoLog(ID, 1024, NULL, infoLog);
+			std::cout << "ERROR::PROGRAM::LINKING::ERROR of type: " << type << "\n" << infoLog << std::endl;
+		}
+	}
 }

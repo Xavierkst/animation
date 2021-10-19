@@ -38,6 +38,7 @@ int MouseX, MouseY;
 
 // The shader program id
 GLuint Window::shaderProgram;
+Shader windowShaderProg;
 
 // ImGui Parameters 
 bool show_demo_window;
@@ -53,7 +54,7 @@ ParticleSys* Window::particle_sys;
 bool Window::initializeProgram() {
 
 	// Create a shader program with a vertex shader and a fragment shader.
-	shaderProgram = LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
+	shaderProgram = windowShaderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
 
 	// Check the shader program.
 	if (!shaderProgram)
@@ -213,12 +214,14 @@ void Window::idleCallback()
 	
 	// Update the skin 
 	skin->Update(glm::mat4(1.0f));
+	
+	//skin->getSkeleton()->Update(glm::mat4(1.0f));
 	// Update AnimationPlayer for skin
-	player->Update(dt / CLOCKS_PER_SEC);
+	//player->Update(dt / CLOCKS_PER_SEC);
 
 	// Update Cloth
 	int tot_steps = 60;
-	cloth->Update((dt/ (CLOCKS_PER_SEC * tot_steps)), gravForce, the_floor, tot_steps); // update gravitational force each instance
+	//cloth->Update((dt/ (CLOCKS_PER_SEC * tot_steps)), gravForce, the_floor, tot_steps); // update gravitational force each instance
 
 	// Update particles 
 	//particle_sys->Update(0.0006f, the_floor);
@@ -234,6 +237,7 @@ void Window::displayCallback(GLFWwindow* window)
 
 	// Render skin
 	skin->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
+	// skin->getSkeleton()->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
 
 	//the_floor->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
 	//cloth->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
