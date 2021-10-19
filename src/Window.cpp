@@ -38,7 +38,9 @@ int MouseX, MouseY;
 
 // The shader program id
 GLuint Window::shaderProgram;
+// GLuint Window::clothShaderProgram;
 Shader windowShaderProg;
+Shader clothShader;
 
 // ImGui Parameters 
 bool show_demo_window;
@@ -55,7 +57,7 @@ bool Window::initializeProgram() {
 
 	// Create a shader program with a vertex shader and a fragment shader.
 	shaderProgram = windowShaderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
-
+	// clothShaderProgram = clothShader.LoadShaders("src/shaders/clothShader.vert", "src/shaders/clothShader.frag");
 	// Check the shader program.
 	if (!shaderProgram)
 	{
@@ -83,10 +85,12 @@ bool Window::initializeObjects()
 
 	time1 = clock();
 
-	// create cloth: force, velo, mass, gridsize (int)
+	// Cloth: force, velo, mass, gridsize (int)
 	clothMass = 0.8f;
 	grid_size = 30;
 	cloth = new Cloth(glm::vec3(.0f), glm::vec3(.0f), clothMass, grid_size);
+	// cloth->setClothTextureID(loadTexture("textures/clothFabric.png"));
+
 	fSize = 30;
 	the_floor = new FloorTile(fSize);
 
@@ -99,6 +103,7 @@ bool Window::initializeObjects()
 
 	// Particle system
 	particle_sys = new ParticleSys(10000);
+
 
 	return true;
 }
@@ -213,7 +218,7 @@ void Window::idleCallback()
 	//cube->update();
 	
 	// Update the skin 
-	skin->Update(glm::mat4(1.0f));
+	// skin->Update(glm::mat4(1.0f));
 	
 	//skin->getSkeleton()->Update(glm::mat4(1.0f));
 	// Update AnimationPlayer for skin
@@ -221,7 +226,7 @@ void Window::idleCallback()
 
 	// Update Cloth
 	int tot_steps = 60;
-	//cloth->Update((dt/ (CLOCKS_PER_SEC * tot_steps)), gravForce, the_floor, tot_steps); // update gravitational force each instance
+	cloth->Update((dt/ (CLOCKS_PER_SEC * tot_steps)), gravForce, the_floor, tot_steps); // update gravitational force each instance
 
 	// Update particles 
 	//particle_sys->Update(0.0006f, the_floor);
@@ -236,11 +241,11 @@ void Window::displayCallback(GLFWwindow* window)
 	//cube->draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
 
 	// Render skin
-	skin->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
+	// skin->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
 	// skin->getSkeleton()->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
 
-	//the_floor->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
-	//cloth->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
+	// the_floor->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
+	cloth->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
 	//particle_sys->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
 
 	// Gets events, including input such as keyboard and mouse or window resizing.
@@ -358,4 +363,40 @@ void Window::imguiCleanUp() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
+
+// Loading textures
+// unsigned int Window::loadTexture(char const* path) {
+// 	unsigned int textureID;
+// 	int img_width, img_ht, num_channels;
+// 	glGenTextures(1, &textureID);
+// 	glBindTexture(GL_TEXTURE_2D, textureID);
+// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+// 
+// 	unsigned char* image_data = stbi_load(path, &img_width, &img_ht, &num_channels, 0);
+// 	if (image_data) {
+// 		GLenum format;
+// 		if (num_channels == 1)
+// 			format = GL_RED;
+// 		else if (num_channels == 3)
+// 			format = GL_RGB;
+// 		else if (num_channels == 4)
+// 			format = GL_RGBA;
+// 
+// 		// copy the data to the texture obj's buffer
+// 		glTexImage2D(GL_TEXTURE_2D, 0, format, img_width, img_ht, 0, format, GL_UNSIGNED_BYTE, image_data);
+// 		// generate the diff resolutions of the texture
+// 		glGenerateMipmap(GL_TEXTURE_2D); 
+// 	}
+// 	else {
+// 		std::cout << "Failed to load texture" << std::endl;
+// 	}
+// 	// free data pointed to by char ptr--its alr sent to GPU
+// 	stbi_image_free(image_data);
+// 
+// 	return textureID;
+// }
+
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,7 @@
 #ifndef _WINDOW_H_
 #define _WINDOW_H_
 
+// we activate some section of the stb_image.h functions -- essentially turning it into a .cpp file 
 #include "main.h"
 #include "shader.h"
 #include "Camera.h"
@@ -36,6 +37,7 @@ public:
 
 	// Shader Program 
 	static GLuint shaderProgram;
+	// static GLuint clothShaderProgram;
 
 	// Act as Constructors and desctructors 
 	static bool initializeProgram();
@@ -60,6 +62,9 @@ public:
 
 	static void imguiCallback(GLFWwindow* window); 
 	static void imguiCleanUp();
+	
+	// Loading textures
+	static unsigned int loadTexture(char const* path);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
