@@ -52,8 +52,8 @@ glm::vec3 Triangle::getVSurface()
 
 void Triangle::calcNormal()
 {
-     normal = glm::normalize(glm::cross((p2->getPos() - p1->getPos()), 
-         (p3->getPos() - p1->getPos())));
+     normal = glm::normalize(glm::cross((p3->getPos() - p1->getPos()), 
+         (p2->getPos() - p1->getPos())));
 }
 
 glm::vec3 Triangle::getNormal()

@@ -1,38 +1,97 @@
 #version 330 core
 
-// Inputs to the fragment shader are the outputs of the same name from the vertex shader.
-// Note that you do not have access to the vertex shader's default output, gl_Position.
-in vec3 fragNormal;
+struct Material {
+	vec3 diffuse;
+	vec3 specular;
+	float shininess;
+};
 
-// uniforms used for lighting
-uniform vec3 AmbientColor = vec3(0.2);
-uniform vec3 LightDirection = normalize(vec3(2.0f, 8.0f, -4.0));
-//uniform vec3 LightColor = vec3(221/255.0f, 130/255.0f, 238/255.0f);
-uniform vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
-uniform vec3 DiffuseColor;	
-// passed in from c++ side NOTE: you can also set the value here and then remove 
-// color from the c++ side
+struct dirLight {
+	vec4 direction;
+	vec3 ambient;
+	vec3 diffuse; 
+	vec3 specular;
+};
 
-uniform vec3 secondLightDirection = normalize(vec3(-1, -5, 2)); 
-uniform vec3 secondLightColor = vec3(.0f/255.0f, 255.0f/255.0f, .0f/255.0f);
+struct pointLight {
+	vec4 position;
+	vec3 ambient;
+	vec3 diffuse; 
+	vec3 specular;
 
-uniform vec3 thirdLightDirection = normalize(vec3(-1, 5, -3)); 
-uniform vec3 thirdLightColor = vec3(1.0f, .0f/255.0f, .0f/255.0f);
+	float k_constant;
+	float k_linear;
+	float k_quad;
+};
 
-// You can output many things. The first vec4 type output determines the color of the fragment
 out vec4 fragColor;
+
+in vec3 fragNormal;
+in vec3 fragPos;
+
+vec3 AmbientColor = vec3(0.2);
+vec3 LightDirection = vec3(-2.0f, -8.0f, -4.0);
+vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
+vec3 DiffuseColor = vec3(1.0f, 1.0f, 1.0f);	
+
+uniform pointLight pt_light;
+uniform dirLight dir_light;
+uniform Material material;
+uniform vec3 view_position;
+
+// Function prototypes
+vec3 calcDirLight(dirLight dir_light, Material mat, vec4 normal, vec4 view_dir);
+vec3 calcPointLight(pointLight point_light, Material mat, vec4 normal, vec4 frag_pos, vec4 view_dir);
 
 void main()
 {
 	// Compute irradiance (sum of ambient & direct lighting)
-	vec3 irradiance = AmbientColor + LightColor * max(0, dot(LightDirection, fragNormal));
+	vec3 normal = normalize(fragNormal);
+	vec3 view_dir = normalize(view_position - fragPos);
+	vec3 dir_to_light = normalize(-LightDirection);
+	// vec3 result = calcDirLight(dir_light, material, vec4(fragNormal, .0f), vec4(view_dir, .0f));
 
 	// Diffuse reflectance
-	vec3 reflectance = (irradiance) * DiffuseColor;
+	float diff = max(dot(dir_to_light, normal), .0f);
+	vec3 result = AmbientColor + diff * DiffuseColor * LightColor;
+	vec3 reflectance = result;
 
-	// What about color clamping? 
+	fragColor = vec4(sqrt(result), 1);
+}
 
-	// Gamma correction
-	fragColor = vec4(sqrt(reflectance), 1);
-	//	fragColor = vec4(vec3(0.5, 0.5f, 0.5f), 1);
+vec3 calcDirLight(dirLight dir_light, Material mat, vec4 normal, vec4 view_dir) {
+	vec4 norm = normalize(normal);
+	vec4 light_dir = normalize(-dir_light.direction);
+	vec4 refl_dir = reflect(-light_dir, norm);
+
+	// vec3 ambient = mat.ambient * dir_light.ambient;
+	vec3 ambient = mat.diffuse.rgb * dir_light.ambient;
+	vec3 diffuse = max(dot(light_dir, norm), 0.0f) * mat.diffuse.rgb * dir_light.diffuse;
+	vec3 specular = pow(max(dot(view_dir.xyz, refl_dir.xyz), .0f), mat.shininess) * mat.specular.rgb * dir_light.specular;
+	
+	// dir lights are infinitely far away, with a constant brightness on all objects, 
+	// hence theres no attenuation from infinitely far away light sources?
+	vec3 result = ambient + diffuse + specular;
+	// texture(texSampler2Dnum, texCoords);
+	return result;
+}
+
+vec3 calcPointLight(pointLight point_light, Material mat, vec4 normal, vec4 frag_pos, vec4 view_dir) {
+	float dist_to_light = length(point_light.position - frag_pos);
+	vec4 norm = normalize(normal);
+	vec4 light_dir = normalize(point_light.position - frag_pos);
+	vec4 refl_dir = reflect(-light_dir, norm);
+
+	vec3 ambient = mat.diffuse.rgb * point_light.ambient;
+	vec3 diffuse = max(dot(light_dir, norm), 0.0f) * mat.diffuse * point_light.diffuse;
+	vec3 specular = pow(max(dot(view_dir, refl_dir), .0f), mat.shininess) * mat.specular * point_light.specular;
+	
+	// Point lights have to be attenuated, since dist to light is some finite distance
+	float attenuation = 1.0 / (point_light.k_constant + point_light.k_linear * dist_to_light + point_light.k_quad * pow(dist_to_light, 2.0f));
+	ambient *= attenuation;
+	diffuse *= attenuation;
+	specular *= attenuation;
+	vec3 result = ambient + diffuse + specular;
+	
+	return result;
 }

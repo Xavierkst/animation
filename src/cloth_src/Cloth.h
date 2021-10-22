@@ -5,6 +5,7 @@
 #include "Triangle.h"
 #include "stdlib.h"
 #include "../FloorTile.h"
+#include "../shader.h"
 
 class Cloth {
 private:
@@ -12,18 +13,17 @@ private:
 	GLuint VAO; 
 	GLuint VBO_pos, VBO_normals;
 	GLuint EBO;
+	GLuint clothTextureID;
+
 	glm::mat4 model; // cloth model matrix (applies to all vertices of the cloth)
 	glm::vec3 color; // cloth's color
 
-	int numSprings; // numsprings is given by (gridSize-1)*(gridSize)*2 + (gridSize-1)*(gridSize-1)*2   which are the horiz, vert and diagonals springs
-	int gridSize; 
+	int numSprings; // numsprings: (gridSize-1)*(gridSize)*2 + (gridSize-1)*(gridSize-1)*2   which are the horiz, vert and diagonals springs
+	int gridSize; // how big it should be
 
-	float springConst, dampConst;
-	glm::vec3 vAir;
-	// swaps bet. vAir and 0 for toggling wind
-	glm::vec3 vAirHolder;
-	float rho, Cd, rest_const, dynamic_fric;
-
+	glm::vec3 vAir; // air velo
+	float springConst, dampConst; // physical consts
+	float rho, Cd, rest_const, dynamic_fric; // other physical consts
 	
 	// Cloth has an array of Particles, Triangles, and springs
 	std::vector<Particle*> particles;
@@ -35,15 +35,16 @@ private:
 	std::vector<glm::vec3> particleNorm; // reflects the normals in "particles"
 	std::vector<glm::vec3> originPts; // the original positions for the top row of cloth
 	glm::mat4 transl;
-	//glm::mat4 rot;
+
 public:
 
 	bool gotWind;
 
-	Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize);
+	Cloth(glm::vec3 pForce = glm::vec3(.0f), glm::vec3 pVelo = glm::vec3(.0f), float pMass = 0.8f, int gSize = 30);
+
 	~Cloth();
 
-	void Draw(const glm::mat4& viewProjMtx, GLuint shader, GLFWwindow* window);
+	void Draw(const glm::mat4& viewProjMtx, Shader& shader, GLFWwindow* window);
 
 	void renderImGui(GLFWwindow* window);
 
@@ -59,6 +60,8 @@ public:
 	glm::vec3& getWindVelo();
 
 	void spin(float deg);
+
+	void setClothTextureID(GLuint texID);
 
 };
 #endif

@@ -2,20 +2,19 @@
 
 Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize)
 {
+	// viable values: Ks = 100.0f, Kd = 50.0f, mass = 1.1f, Cd = 1.020f
+	// Another viable set of values (?) Ks = 50.0f, Kd = 30.0f, mass = 1.1f, Cd = 1.020f
 	gridSize = gSize;
 	model = glm::mat4(1.0f);
 	color = glm::vec3(1.0f, 1.0f, 1.0f);
-	//springConst = 50.0f; // 35 
-	//dampConst = 30.0f; // 30
-	springConst = 200.0f; // viable values: Ks = 100.0f, Kd = 50.0f, mass = 1.1f, Cd = 1.020f
-	dampConst = 30.0f; // another viable set of values: Ks = 50.0f, Kd = 30.0f, mass = 1.1f (but a bit elastic-ey), Cd = 1.020f
+	springConst = 200.0f; 
+	dampConst = 30.0f; 
 	vAir = glm::vec3(15.0f, .0f, -3.0f);
 	Cd = 1.020f;
 	rho = 1.225;
 	rest_const = 0.05f;
 	dynamic_fric = 0.60f;
 
-	vAirHolder = glm::vec3(.0f);
 	gotWind = true;
 	transl = glm::mat4(1.0f);
 
@@ -211,24 +210,36 @@ Cloth::~Cloth()
 	}
 }
 
-void Cloth::Draw(const glm::mat4& viewProjMtx, GLuint shader, GLFWwindow* window)
+void Cloth::Draw(const glm::mat4& viewProjMtx, Shader& shader, GLFWwindow* window)
 {
-	// actiavte the shader program 
-	glUseProgram(shader);
+	// activate the shader program 
+	// glUseProgram(shader.ID);
+	shader.use();
+	
+	// Update light values
+	shader.setFloat("point_light.k_constant", 1.0f);
+	shader.setFloat("point_light.k_linear", 1.0f);
+	shader.setFloat("point_light.k_quad", 1.0f);
+	// glUniform1f(glGetUniformLocation(shader.ID, "point_light.k_constant"), 1.0f);
+	// glUniform1f(glGetUniformLocation(shader.ID, "point_light.k_linear"), 0.09f);
+	// glUniform1f(glGetUniformLocation(shader.ID, "point_light.k_quad"), 0.032f);
+
+	// glActiveTexture(GL_TEXTURE0);
+	// glBindTexture(GL_TEXTURE_2D, clothTextureID);
 
 	// get the locations and send the uniforms to the shader 
-	glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, (float*)&viewProjMtx);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, (float*)&model);
-	glUniform3fv(glGetUniformLocation(shader, "DiffuseColor"), 1, &color[0]);
+	shader.setMat4("model", this->model);
+	shader.setMat4("viewProj", viewProjMtx);
+	shader.setVec3("material.diffuse_texture1", glm::vec3(0.5f));
+	// glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, (float*)&viewProjMtx);
+	// glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, (float*)&model);
+	// glUniform3fv(glGetUniformLocation(shader, "DiffuseColor"), 1, &color[0]);
 
 	// Bind the VAO
 	glBindVertexArray(VAO);
 
 	// draw the points using triangles, indexed with the EBO
 	glDrawElements(GL_TRIANGLES, triIndices.size(), GL_UNSIGNED_INT, 0);
-	//glDrawArrays(GL_POINTS, 0, triIndices.size());
-
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	// Unbind the VAO and shader program
 	glBindVertexArray(0);
@@ -285,7 +296,7 @@ void Cloth::Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps)
 			springs[i]->computeForce();
 		}
 
-		// Apply aerodynamic forces on ea particle by looping thru 
+		// Apply aerodynamic forces on each particle by looping thru 
 		// every triangle 
 
 		// step 1: zero out each particle's normals (done in the grav. pass above)
@@ -365,6 +376,7 @@ void Cloth::Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps)
     glBindBuffer(GL_ARRAY_BUFFER, VBO_normals);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * particleNorm.size(), particleNorm.data(), GL_DYNAMIC_DRAW);
 
+	
     // Unbind the VBOs
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -407,6 +419,11 @@ void Cloth::spin(float deg)
 		particles[i]->setPos(nPos);
 		particlePos[i] = nPos;
 	}
+}
+
+void Cloth::setClothTextureID(GLuint texID)
+{
+	clothTextureID = texID;
 }
 
 
