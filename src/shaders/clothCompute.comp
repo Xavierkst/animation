@@ -1,0 +1,40 @@
+#version 330 core
+
+#extension GL_ARB_compute_shader: enable
+#extension GL_ARB_shader_storage_buffer_object: enable
+// uniform unsigned int gSize;
+layout ( local_size_x = 30, local_size_y = 30 ) in;
+
+layout (std430, binding = 0) buffer PosIn {
+	vec4 PositionIn[];
+};
+
+layout (std430, binding = 1) buffer PosOut {
+	vec4 PositionOut[];
+}
+
+}
+layout (std430, binding = 2) buffer VeloIn {
+	vec4 VelocityIn[];
+};
+
+layout (std430, binding = 3) buffer VeloOut {
+	vec4 VelocityOut[];
+};
+uniform vec3 gravity = vec3(.0f, -9.8f, .0f);
+uniform float sprint_const = 200.0f;
+uniform float damp_const = 30.0f;
+uniform float C_d = 1.020f;
+uniform float rho = 1.225f;
+uniform float rest_const = 0.05f;
+uniform float dynamic_fric = 0.60f;
+uniform float particle_mass = 0.8f;
+uniform float delta_T = 0.000005f; 
+uniform float rest_length;
+
+void main() {
+	
+
+
+	
+}
