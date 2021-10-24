@@ -27,8 +27,8 @@ void main()
 {
 	// Compute irradiance (sum of ambient & direct lighting)
 	vec3 irradiance = AmbientColor 
-//		+ thirdLightColor * max(0, dot(thirdLightDirection, fragNormal)) 
-//		+ secondLightColor * max(0, dot(secondLightDirection, fragNormal)) 
+	// + thirdLightColor * max(0, dot(thirdLightDirection, fragNormal)) 
+	// + secondLightColor * max(0, dot(secondLightDirection, fragNormal)) 
 		+ LightColor * max(0, dot(LightDirection, fragNormal));
 
 	// Diffuse reflectance

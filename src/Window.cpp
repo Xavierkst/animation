@@ -18,6 +18,7 @@ Skin* Window::skin;
 AnimationClip* Window::clip;
 AnimationPlayer* Window::player;
 Cloth* Window::cloth;
+const char* computeShaderPath;
 
 float time1, time2;
 
@@ -38,7 +39,7 @@ int MouseX, MouseY;
 
 // The shader program id
 GLuint Window::shaderProgram;
-// GLuint Window::clothShaderProgram;
+GLuint Window::clothShaderProgram;
 Shader windowShaderProg;
 Shader clothShader;
 
@@ -57,11 +58,11 @@ bool Window::initializeProgram() {
 
 	// Create a shader program with a vertex shader and a fragment shader.
 	shaderProgram = windowShaderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
-	// clothShaderProgram = clothShader.LoadShaders("src/shaders/clothShader.vert", "src/shaders/clothShader.frag");
+	clothShaderProgram = clothShader.LoadShaders("src/shaders/clothShader.vert", "src/shaders/clothShader.frag", "shaders/computeShader.comp");
 	// Check the shader program.
-	if (!shaderProgram)
+	if (!shaderProgram || !clothShaderProgram)
 	{
-		std::cerr << "Failed to initialize shader program" << std::endl;
+		std::cerr << "Failed to initialize shader programs" << std::endl;
 		return false;
 	}
 
@@ -88,8 +89,10 @@ bool Window::initializeObjects()
 	// Cloth: force, velo, mass, gridsize (int)
 	clothMass = 0.8f;
 	grid_size = 30;
-	cloth = new Cloth(glm::vec3(.0f), glm::vec3(.0f), clothMass, grid_size);
+	// cloth = new Cloth(glm::vec3(.0f), glm::vec3(.0f), clothMass, grid_size);
+	cloth = new Cloth();
 	// cloth->setClothTextureID(loadTexture("textures/clothFabric.png"));
+	computeShaderPath = "shaders/clothCompute.comp";
 
 	fSize = 30;
 	the_floor = new FloorTile(fSize);
@@ -245,7 +248,7 @@ void Window::displayCallback(GLFWwindow* window)
 	// skin->getSkeleton()->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
 
 	// the_floor->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
-	cloth->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
+	cloth->Draw(Cam->GetViewProjectMtx(), clothShader, window);
 	//particle_sys->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
 
 	// Gets events, including input such as keyboard and mouse or window resizing.

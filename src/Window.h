@@ -37,7 +37,7 @@ public:
 
 	// Shader Program 
 	static GLuint shaderProgram;
-	// static GLuint clothShaderProgram;
+	static GLuint clothShaderProgram;
 
 	// Act as Constructors and desctructors 
 	static bool initializeProgram();

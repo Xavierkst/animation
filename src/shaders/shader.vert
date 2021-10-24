@@ -19,5 +19,5 @@ void main()
     gl_Position = viewProj * model * vec4(position, 1.0);
     
     // for shading
-	fragNormal = vec3(model * vec4(normal, 0));
+	fragNormal = vec3(inverse(transpose(model)) * vec4(normal, 0));
 }
