@@ -18,18 +18,17 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-
-enum ShaderType { vertex, fragment };
+enum ShaderType { vertex, fragment, compute };
 
 class Shader {
 private:
 	void checkCompileErrors(unsigned int ID, std::string type);
 public:
 	
-	unsigned int ID; // Shader ID
+	GLuint ID; // Shader ID
 
 	GLuint Shader::LoadSingleShader(const char* shaderFilePath, ShaderType type);
-	GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path);
+	GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path, const char* computeFilePath = NULL);
 
 	void setBool(const std::string& name, bool value);
 	void setInt(const std::string& name, int value);
