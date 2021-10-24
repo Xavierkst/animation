@@ -40,6 +40,7 @@ void SpringDamper::computeForce()
 	if (p1->getForceApply()) {
 		p1->applyForce(f1);
 	}
+
 	if (p2->getForceApply()) {
 		p2->applyForce(f2);
 	}

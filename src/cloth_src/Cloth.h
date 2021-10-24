@@ -7,6 +7,9 @@
 #include "../FloorTile.h"
 #include "../shader.h"
 
+#include <fstream>
+#include <sstream>
+
 class Cloth {
 private:
 
@@ -30,17 +33,17 @@ private:
 	std::vector<SpringDamper*> springs;
 	std::vector<Triangle> triangles; // triangle vector	
 
-	std::vector<int> triIndices;
+	std::vector<int> triIndices; // Indices for the EBO 
+	std::vector<glm::vec3> particlePos; // reflects the positions in "particles"
 	std::vector<glm::vec3> particlePos; // reflects the positions in "particles"
 	std::vector<glm::vec3> particleNorm; // reflects the normals in "particles"
-	std::vector<glm::vec3> originPts; // the original positions for the top row of cloth
-	glm::mat4 transl;
 
 public:
 
 	bool gotWind;
 
-	Cloth(glm::vec3 pForce = glm::vec3(.0f), glm::vec3 pVelo = glm::vec3(.0f), float pMass = 0.8f, int gSize = 30);
+	Cloth(glm::vec3 pForce = glm::vec3(.0f), 
+		glm::vec3 pVelo = glm::vec3(.0f), float pMass = 0.8f, int gSize = 30);
 
 	~Cloth();
 
@@ -50,6 +53,8 @@ public:
 
 	// pass in time, and grav force (and maybe wind velocity later?)
 	void Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps); 
+
+	void Update2(float delta_t, glm::vec3 g, FloorTile* floor, int steps); 
 
 	void togglePos(glm::vec3 moveAmt);
 

@@ -1,22 +1,20 @@
 #include "Cloth.h"
 
-Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize)
+Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize): model(glm::mat4(1.0f)), color(glm::vec3(1.0f)), gridSize(gSize)
 {
 	// viable values: Ks = 100.0f, Kd = 50.0f, mass = 1.1f, Cd = 1.020f
 	// Another viable set of values (?) Ks = 50.0f, Kd = 30.0f, mass = 1.1f, Cd = 1.020f
-	gridSize = gSize;
-	model = glm::mat4(1.0f);
-	color = glm::vec3(1.0f, 1.0f, 1.0f);
+
+	vAir = glm::vec3(15.0f, .0f, -3.0f); // air velocity
+	// Other physical constants
 	springConst = 200.0f; 
 	dampConst = 30.0f; 
-	vAir = glm::vec3(15.0f, .0f, -3.0f);
 	Cd = 1.020f;
 	rho = 1.225;
 	rest_const = 0.05f;
 	dynamic_fric = 0.60f;
 
 	gotWind = true;
-	transl = glm::mat4(1.0f);
 
 	// SPRINGS: make edge from curr pt and one-right of it, and curr pt and one-down
 	// *2 for horiz and vertical springs
@@ -28,15 +26,11 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize)
 	// Given a gridSize, we want to set the positions of the particles here 
 	for (int i = gridSize - 1; i >= 0; i--) {
 		for (int j = 0; j < gridSize; j++) {
-			// force, velo, pos, normal, mass
 			// force and velo default to 0
-			float randVal = (rand() % 100 + 1) / 1000.0f;
+			// randomized z-component starter values
+			float randVal = (rand() % 100 + 1) / 1000.0f; 
 			particles.push_back(new Particle(pForce, pVelo, 
 				glm::vec3((float(j) - ((float(gridSize) - 1.0f) / 2.0f)) / 5.0f, (float(i) - ((float(gridSize)- 1.0f) / 2.0f)) / 5.0f, randVal), glm::vec3(.0f,.0f, 1.0f) ,pMass));
-			// store the top row positions into this array for rotation
-			originPts.push_back(glm::vec3((float(j) - ((float(gridSize) - 1.0f) / 2.0f)) / 5.0f, (float(i) - ((float(gridSize)- 1.0f) / 2.0f)) / 5.0f, randVal));
-			// We've pushed in gridSize * gridSize # of particles
-			// with their positions and normals
 		}
 	}
 
@@ -67,28 +61,23 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize)
 			triIndices.push_back(i * gridSize + j + 1);
 			triIndices.push_back((i+1) * gridSize + j);
 			// make triangle pointing to particles for this triangle
-			triangles.push_back(
-				Triangle(particles[i * gridSize + j], 
+			triangles.push_back(Triangle(particles[i * gridSize + j], 
 					particles[i*gridSize + j + 1], 
-					particles[(i+1)*gridSize + j])
-			);
+					particles[(i+1)*gridSize + j]));
 				
 			// tri 2
 			triIndices.push_back(i * gridSize + j + 1);
 			triIndices.push_back((i+1) * gridSize + j + 1);
 			triIndices.push_back((i+1) * gridSize + j);
-			triangles.push_back(
-			// make triangle pointing to particles for this triangle
-				Triangle(particles[i * gridSize + j + 1], 
+			triangles.push_back(Triangle(particles[i * gridSize + j + 1], 
 					particles[(i+1) * gridSize + j + 1], 
-					particles[(i+1)*gridSize + j])
-			);
+					particles[(i+1)*gridSize + j]));
 
 		}
 	}
 
-	// Link up springs to corresponding portion 
-	//auto spring_iter = springs.begin();
+	// Link up springs to corresponding portion:
+
 	// link horizontal springs
 	for (int i = 0; i < gridSize; i++) {
 		for (int j = 0; j < gridSize - 1; j++) {
@@ -134,17 +123,6 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize)
 		}
 	}
 
-	// link diagonal from btm left to top right
-	for (int i = 0; i < gridSize - 1; i++) {
-		for (int j = 1; j < gridSize; j++) {
-			Particle* point1 = particles[(i * gridSize) + j]; 
-			Particle* point2 = particles[((i + 1) * gridSize) + j - 1];
-			float natLength = glm::length(point1->getPos() - point2->getPos());
-			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
-			//spring_iter++;
-		}
-	}
-	
 	// link curr to 2 particles to its right
 	for (int i = 0; i < gridSize; i++) {
 		for (int j = 0; j < gridSize - 2; j++) {
@@ -164,7 +142,6 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize)
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 		}
 	}
-
 	// All springs have been linked up at this point
 
 	// initialize the grid using openGL
@@ -213,16 +190,12 @@ Cloth::~Cloth()
 void Cloth::Draw(const glm::mat4& viewProjMtx, Shader& shader, GLFWwindow* window)
 {
 	// activate the shader program 
-	// glUseProgram(shader.ID);
 	shader.use();
 	
-	// Update light values
+	// light uniform values
 	shader.setFloat("point_light.k_constant", 1.0f);
 	shader.setFloat("point_light.k_linear", 1.0f);
 	shader.setFloat("point_light.k_quad", 1.0f);
-	// glUniform1f(glGetUniformLocation(shader.ID, "point_light.k_constant"), 1.0f);
-	// glUniform1f(glGetUniformLocation(shader.ID, "point_light.k_linear"), 0.09f);
-	// glUniform1f(glGetUniformLocation(shader.ID, "point_light.k_quad"), 0.032f);
 
 	// glActiveTexture(GL_TEXTURE0);
 	// glBindTexture(GL_TEXTURE_2D, clothTextureID);
@@ -231,9 +204,6 @@ void Cloth::Draw(const glm::mat4& viewProjMtx, Shader& shader, GLFWwindow* windo
 	shader.setMat4("model", this->model);
 	shader.setMat4("viewProj", viewProjMtx);
 	shader.setVec3("material.diffuse_texture1", glm::vec3(0.5f));
-	// glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, (float*)&viewProjMtx);
-	// glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, (float*)&model);
-	// glUniform3fv(glGetUniformLocation(shader, "DiffuseColor"), 1, &color[0]);
 
 	// Bind the VAO
 	glBindVertexArray(VAO);
@@ -269,9 +239,11 @@ void Cloth::renderImGui(GLFWwindow* window)
     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
-    //glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-    //glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void Update2(float delta_t, glm::vec3 g, FloorTile* floor, int steps) {
+
 }
 
 // Updates all the forces acting on the cloth particles
@@ -310,6 +282,7 @@ void Cloth::Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps)
 			triangles[i].getP1()->addNorm(triN);
 			triangles[i].getP2()->addNorm(triN);
 			triangles[i].getP3()->addNorm(triN);
+
 			// Apply Aerodynamic force on p1 p2 p3
 			glm::vec3 aeroF = triangles[i].calcAeroForce(this->vAir, this->rho, this->Cd) / 3.0f;
 			if (gotWind) {
@@ -385,7 +358,7 @@ void Cloth::Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps)
 void Cloth::togglePos(glm::vec3 moveAmt)
 {
 	glm::mat4 moveMat = glm::translate(glm::mat4(1.0f), moveAmt);
-	transl *= moveMat;
+	model *= moveMat;
 	for (int i = 0; i < gridSize; i++) {
 		glm::vec3 newPos = moveMat * glm::vec4(particles[i]->getPos(), 1.0f);
 		particles[i]->setPos(newPos);
@@ -414,8 +387,8 @@ void Cloth::spin(float deg)
 	//model = model * glm::rotate(glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f));
 	for (int i = 0; i < gridSize; i++) {
 		glm::mat4 rot(glm::rotate(glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f)));
-		glm::mat4 newTransl(glm::inverse(transl));
-		glm::vec3 nPos = transl * rot * newTransl * glm::vec4(particles[i]->getPos(), 1.0f);
+		glm::mat4 newTransl(glm::inverse(model));
+		glm::vec3 nPos = model * rot * newTransl * glm::vec4(particles[i]->getPos(), 1.0f);
 		particles[i]->setPos(nPos);
 		particlePos[i] = nPos;
 	}
