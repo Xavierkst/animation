@@ -11,9 +11,8 @@ layout (std430, binding = 0) buffer PosIn {
 
 layout (std430, binding = 1) buffer PosOut {
 	vec4 PositionOut[];
-}
+};
 
-}
 layout (std430, binding = 2) buffer VeloIn {
 	vec4 VelocityIn[];
 };
@@ -21,8 +20,9 @@ layout (std430, binding = 2) buffer VeloIn {
 layout (std430, binding = 3) buffer VeloOut {
 	vec4 VelocityOut[];
 };
+
 uniform vec3 gravity = vec3(.0f, -9.8f, .0f);
-uniform float sprint_const = 200.0f;
+uniform float spring_const = 200.0f;
 uniform float damp_const = 30.0f;
 uniform float C_d = 1.020f;
 uniform float rho = 1.225f;
@@ -30,11 +30,107 @@ uniform float rest_const = 0.05f;
 uniform float dynamic_fric = 0.60f;
 uniform float particle_mass = 0.8f;
 uniform float delta_T = 0.000005f; 
-uniform float rest_length;
+
+uniform float rest_lengthVert;
+uniform float rest_lengthHoriz;
+uniform float rest_lengthDiag;
+
+vec3 computeSpringForce(float Ks, vec3 neighbor_particle_vec, float rest_len);
 
 void main() {
-	
+	// Compute the index -- Note it is row major 
+	uvec3 nParticles = gl_WorkGroupSize * gl_NumWorkGroups;
+	uint idx = gl_GlobalInvocationID.y * nParticles.x + gl_GlobalInvocationID.x;
 
-
+	vec3 p = vec3(PositionIn[idx]);
+	vec3 v = vec3(VelocityIn[idx]);
 	
+	// Compute gravitational force: 
+	vec3 force = particle_mass * gravity;
+	vec3 neighbor_pos;
+	vec3 r;
+	// Compute the spring damper forces acting on 'idx' from the spring 
+	// to its left, right, and diagonals
+	// compute its left: 
+	if (gl_GlobalInvocationID.x > 0u) {
+		neighbor_pos = vec3(PositionIn[idx -1u]);
+		r = (neighbor_pos - p);
+		// compute final forces:
+		force += computeSpringForce(spring_const, r, rest_lengthHoriz);
+	}
+	// compute its right: 
+	if (gl_GlobalInvocationID.x < nParticles.x - 1u) {
+		neighbor_pos = vec3(PositionIn[idx + 1u]);
+		r = (neighbor_pos - p);
+		// compute final forces:
+		force += computeSpringForce(spring_const, r, rest_lengthHoriz);
+	}
+
+	// compute its bottom: 
+	if (gl_GlobalInvocationID.y > 0u) {
+		neighbor_pos = vec3(PositionIn[idx - nParticles.x]);
+		r = (neighbor_pos - p);
+		// compute final forces:
+		force += computeSpringForce(spring_const, r, rest_lengthVert);
+	}
+
+	// compute its top: 
+	if (gl_GlobalInvocationID.y < nParticles.y - 1u) {
+		neighbor_pos = vec3(PositionIn[idx + nParticles.x]);
+		r = (neighbor_pos - p);
+		// compute final forces:
+		force += computeSpringForce(spring_const, r, rest_lengthVert);
+	}
+
+	// compute its diagonal top left: 
+	if (gl_GlobalInvocationID.x > 0u && gl_GlobalInvocationID.y < nParticles.y - 1u) {
+		neighbor_pos = vec3(PositionIn[idx + nParticles.x - 1u]);
+		r = (neighbor_pos - p);
+		// compute final forces:
+		force += computeSpringForce(spring_const, r, rest_lengthVert);
+	}
+
+	// compute its diagonal top right: 
+	if (gl_GlobalInvocationID.x < nParticles.x - 1u && gl_GlobalInvocationID.y < nParticles.y - 1u) {
+		neighbor_pos = vec3(PositionIn[idx + nParticles.x + 1u]);
+		r = (neighbor_pos - p);
+		// compute final forces:
+		force += computeSpringForce(spring_const, r, rest_lengthVert);
+	}
+
+	// compute its diagonal btm right: 
+	if (gl_GlobalInvocationID.x < nParticles.x - 1u && gl_GlobalInvocationID.y > 0u) {
+		neighbor_pos = vec3(PositionIn[idx - nParticles.x + 1u]);
+		r = (neighbor_pos - p);
+		// compute final forces:
+		force += computeSpringForce(spring_const, r, rest_lengthVert);
+	}
+
+	// compute its diagonal btm left: 
+	if (gl_GlobalInvocationID.x > 0u && gl_GlobalInvocationID.y > 0u) {
+		neighbor_pos = vec3(PositionIn[idx - nParticles.x - 1u]);
+		r = (neighbor_pos - p);
+		// compute final forces:
+		force += computeSpringForce(spring_const, r, rest_lengthVert);
+	}
+	
+	// Add the damping force: 
+	force += -damp_const * v;
+
+	// integrate motion:
+	vec3 a = force * (1.0f / particle_mass);
+	PositionOut[idx] = vec4((p + v * delta_T) + (0.5f * a * delta_T * delta_T), 1.0f);
+	VelocityOut[idx] = vec4(v + a * delta_T, 0.f); 
+	
+	// Pin the top particles -- make it not move 
+	if (gl_GlobalInvocationID.y == nParticles.y - 1u) {
+		PositionOut[idx] = vec4(p, 1.0f);
+		VelocityOut[idx] = vec4(0, 0, 0, 0);
+	}
+}
+
+vec3 computeSpringForce(float Ks, vec3 r, float rest_len) {
+	vec3 f = normalize(r) * Ks * (length(r) - rest_len);
+
+	return f; 
 }
