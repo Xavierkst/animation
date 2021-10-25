@@ -72,6 +72,43 @@ GLuint Shader::LoadSingleShader(const char * shaderFilePath, ShaderType type)
 	return shaderID;
 }
 
+bool Shader::LinkShader(GLuint shaderID)
+{
+	if (shaderID == 0) {
+		printf("Shader linking failed!");
+		return 0;
+	}
+
+	GLint Result = GL_FALSE;
+	int InfoLogLength;
+
+	// Link the program.
+	printf("Linking program\n");
+	glAttachShader(this->ID, shaderID);
+	glLinkProgram(this->ID);
+
+	// Check the program.
+	glGetProgramiv(this->ID, GL_LINK_STATUS, &Result);
+	glGetProgramiv(this->ID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+	if (InfoLogLength > 0) 
+	{
+		std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
+		glGetProgramInfoLog(this->ID, InfoLogLength, NULL, ProgramErrorMessage.data());
+		std::string msg(ProgramErrorMessage.begin(), ProgramErrorMessage.end());
+		std::cerr << msg << std::endl;
+		glDeleteProgram(this->ID);
+		return 0;
+	}
+	else
+	{
+		printf("Successfully linked program!\n");
+	}
+	
+	glDetachShader(this->ID, shaderID);
+
+	return 1;
+}
+
 GLuint Shader::LoadShaders(const char * vertexFilePath, const char * fragmentFilePath, const char* computeFilePath) 
 {
 	// Create the vertex shader and fragment shader.
@@ -81,7 +118,6 @@ GLuint Shader::LoadShaders(const char * vertexFilePath, const char * fragmentFil
 	if (computeFilePath) {
 		computeShaderID = LoadSingleShader(computeFilePath, compute);
 	}
-
 
 	// Check both shaders.
 	if (vertexShaderID == 0 || fragmentShaderID == 0) return 0;

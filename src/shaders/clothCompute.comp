@@ -130,7 +130,5 @@ void main() {
 }
 
 vec3 computeSpringForce(float Ks, vec3 r, float rest_len) {
-	vec3 f = normalize(r) * Ks * (length(r) - rest_len);
-
-	return f; 
+	return normalize(r) * Ks * (length(r) - rest_len);
 }

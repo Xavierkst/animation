@@ -28,6 +28,7 @@ public:
 	GLuint ID; // Shader ID
 
 	GLuint Shader::LoadSingleShader(const char* shaderFilePath, ShaderType type);
+	bool Shader::LinkShader(GLuint shaderID);
 	GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path, const char* computeFilePath = NULL);
 
 	void setBool(const std::string& name, bool value);
