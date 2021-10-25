@@ -14,18 +14,17 @@ class Cloth {
 private:
 
 	Shader renderProg, computeProg, computeProgNorm;
-
-	GLuint VAO; 
+	GLuint clothVAO; 
 	GLuint VBO_pos, VBO_normals;
 	GLuint EBO;
 	GLuint clothTextureID;
 
+	GLuint computePosBuf[2]; // creating VBOs to read and write from the compute buffers
+	GLuint computeVeloBuf[2];
 	GLuint computeShaderProgram;
 	GLuint computeShader;
 	glm::vec2 nParticles;
 	int readBuf;
-	GLuint computeBufPos[2]; // creating VBOs to read and write from the compute buffers
-	GLuint computeBufVelo[2];
 
 	glm::mat4 model; // cloth model matrix (applies to all vertices of the cloth)
 	glm::vec3 color; // cloth's color
@@ -52,8 +51,7 @@ public:
 
 	bool gotWind;
 
-	Cloth(glm::vec3 pForce = glm::vec3(.0f), 
-		glm::vec3 pVelo = glm::vec3(.0f), float pMass = 0.8f, int gSize = 10, const char* computeShaderPath = "src/shaders/clothCompute.comp");
+	Cloth(const char* computeShaderPath = "src/shaders/clothCompute.comp");
 
 	~Cloth();
 

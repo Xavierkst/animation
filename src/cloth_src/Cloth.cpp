@@ -1,10 +1,13 @@
 #include "Cloth.h"
 
-Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::vec3(1.0f)), gridSize(gSize)
+Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::vec3(1.0f)), gridSize(10)
 {
 	// viable values: Ks = 100.0f, Kd = 50.0f, mass = 1.1f, Cd = 1.020f
 	// Another viable set of values (?) Ks = 50.0f, Kd = 30.0f, mass = 1.1f, Cd = 1.020f
 	renderProg.LoadShaders("src/shaders/clothShader.vert", "src/shaders/clothShader.frag");	
+
+	glm::vec2 clothSize(4.0f, 4.0f);
+	nParticles = glm::ivec2(30, 30);
 
 	vAir = glm::vec3(15.0f, .0f, -3.0f); // air velocity
 	// Other physical constants
@@ -14,29 +17,28 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const ch
 	rho = 1.225;
 	rest_const = 0.05f;
 	dynamic_fric = 0.60f;
-
+	float pMass = 0.8f;
 	gotWind = true;
 
-	// SPRINGS: make edge from curr pt and one-right of it, and curr pt and one-down
-	// *2 for horiz and vertical springs
-	numSprings = gridSize * (gridSize - 1)*2;
-
-	// SPRINGS: account for diagonal springs, *2 for both diagonals
-	numSprings += (gridSize - 1) * (gridSize - 1) * 2;
+	float dx = clothSize.x / (nParticles.x - 1);
+	float dy = clothSize.y / (nParticles.y - 1);
 
 	// Given a gridSize, we want to set the positions of the particles here 
-	for (int i = gridSize - 1; i >= 0; i--) {
-		for (int j = 0; j < gridSize; j++) {
+	for (int i = nParticles.y - 1; i >= 0; i--) {
+		for (int j = 0; j < nParticles.x; j++) {
 			// force and velo default to 0
 			// randomized z-component starter values
 			float randVal = (rand() % 100 + 1) / 1000.0f; 
-			particles.push_back(new Particle(pForce, pVelo, 
-				glm::vec3((float(j) - ((float(gridSize) - 1.0f) / 2.0f)) / 5.0f, (float(i) - ((float(gridSize)- 1.0f) / 2.0f)) / 5.0f, randVal), glm::vec3(.0f,.0f, 1.0f) ,pMass));
+			// particles.push_back(new Particle(glm::vec3(.0f), glm::vec3(.0f), 
+			// 	glm::vec3((float(j) - ((float(gridSize) - 1.0f) / 2.0f)) / 5.0f, (float(i) - ((float(gridSize)- 1.0f) / 2.0f)) / 5.0f, randVal), glm::vec3(.0f,.0f, 1.0f) ,pMass));
+
+			particles.push_back(new Particle(glm::vec3(.0f), glm::vec3(.0f), 
+				glm::vec3((j - (nParticles.x -1) / 2.0f) * dx, i * dy * 2.0f, 0.0f), glm::vec3(.0f,.0f, 1.0f) ,pMass));
 		}
 	}
 
 	// Make sure force doesn't apply on the top row of particles
-	for (int j = 0; j < gridSize; j++) {
+	for (int j = 0; j < nParticles.x; j++) {
 		particles[j]->setForceApply(false);
 	}
 
@@ -55,24 +57,24 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const ch
 		
 	// account for normals index 
 	// and create triangles 
-	for (int i = 0; i < gridSize - 1; i++) {
-		for (int j = 0; j < gridSize - 1; j++) {
+	for (int i = 0; i < nParticles.x - 1; i++) {
+		for (int j = 0; j < nParticles.x - 1; j++) {
 			// get indices for tri 1
-			triIndices.push_back(i * gridSize + j);
-			triIndices.push_back(i * gridSize + j + 1);
-			triIndices.push_back((i+1) * gridSize + j);
+			triIndices.push_back(i * nParticles.x + j);
+			triIndices.push_back(i * nParticles.x + j + 1);
+			triIndices.push_back((i+1) * nParticles.x + j);
 			// make triangle pointing to particles for this triangle
-			triangles.push_back(Triangle(particles[i * gridSize + j], 
-					particles[i*gridSize + j + 1], 
-					particles[(i+1)*gridSize + j]));
+			triangles.push_back(Triangle(particles[i * nParticles.x + j], 
+					particles[i*nParticles.x + j + 1], 
+					particles[(i+1)*nParticles.x + j]));
 				
 			// tri 2
-			triIndices.push_back(i * gridSize + j + 1);
-			triIndices.push_back((i+1) * gridSize + j + 1);
-			triIndices.push_back((i+1) * gridSize + j);
-			triangles.push_back(Triangle(particles[i * gridSize + j + 1], 
-					particles[(i+1) * gridSize + j + 1], 
-					particles[(i+1)*gridSize + j]));
+			triIndices.push_back(i * nParticles.x + j + 1);
+			triIndices.push_back((i+1) * nParticles.x + j + 1);
+			triIndices.push_back((i+1) * nParticles.x + j);
+			triangles.push_back(Triangle(particles[i * nParticles.x + j + 1], 
+					particles[(i+1) * nParticles.x + j + 1], 
+					particles[(i+1)*nParticles.x + j]));
 
 		}
 	}
@@ -80,10 +82,10 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const ch
 	// Link up springs to corresponding portion:
 
 	// link horizontal springs
-	for (int i = 0; i < gridSize; i++) {
-		for (int j = 0; j < gridSize - 1; j++) {
-			Particle* point1 = particles[(i * gridSize) + j];
-			Particle* point2 = particles[(i * gridSize) + j + 1];
+	for (int i = 0; i < nParticles.x; i++) {
+		for (int j = 0; j < nParticles.x - 1; j++) {
+			Particle* point1 = particles[(i * nParticles.x) + j];
+			Particle* point2 = particles[(i * nParticles.x) + j + 1];
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			// Ks, Kd, spr_nat_length, * p1, * p2
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
@@ -92,10 +94,10 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const ch
 	}
 
 	// link vertical springs
-	for (int i = 0; i < gridSize - 1; i++) {
-		for (int j = 0; j < gridSize; j++) {
-			Particle* point1 = particles[(i * gridSize) + j]; 
-			Particle* point2 = particles[((i + 1) * gridSize) + j];
+	for (int i = 0; i < nParticles.x - 1; i++) {
+		for (int j = 0; j < nParticles.x; j++) {
+			Particle* point1 = particles[(i * nParticles.x) + j]; 
+			Particle* point2 = particles[((i + 1) * nParticles.x) + j];
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
@@ -103,10 +105,10 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const ch
 	}
 
 	// link diagonal from top left to btm right
-	for (int i = 0; i < gridSize - 1; i++) {
-		for (int j = 0; j < gridSize - 1; j++) {
-			Particle* point1 = particles[(i * gridSize) + j]; 
-			Particle* point2 = particles[((i + 1) * gridSize) + j + 1];
+	for (int i = 0; i < nParticles.x - 1; i++) {
+		for (int j = 0; j < nParticles.x - 1; j++) {
+			Particle* point1 = particles[(i * nParticles.x) + j]; 
+			Particle* point2 = particles[((i + 1) * nParticles.x) + j + 1];
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
@@ -114,10 +116,10 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const ch
 	}
 
 	// link diagonal from btm left to top right
-	for (int i = 0; i < gridSize - 1; i++) {
-		for (int j = 1; j < gridSize; j++) {
-			Particle* point1 = particles[(i * gridSize) + j]; 
-			Particle* point2 = particles[((i + 1) * gridSize) + j - 1];
+	for (int i = 0; i < nParticles.x - 1; i++) {
+		for (int j = 1; j < nParticles.x; j++) {
+			Particle* point1 = particles[(i * nParticles.x) + j]; 
+			Particle* point2 = particles[((i + 1) * nParticles.x) + j - 1];
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
@@ -125,20 +127,20 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const ch
 	}
 
 	// link curr to 2 particles to its right
-	for (int i = 0; i < gridSize; i++) {
-		for (int j = 0; j < gridSize - 2; j++) {
-			Particle* point1 = particles[(i * gridSize) + j]; 
-			Particle* point2 = particles[(i * gridSize) + j + 2];
+	for (int i = 0; i < nParticles.x; i++) {
+		for (int j = 0; j < nParticles.x - 2; j++) {
+			Particle* point1 = particles[(i * nParticles.x) + j]; 
+			Particle* point2 = particles[(i * nParticles.x) + j + 2];
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 		}
 	}
 
 	// link curr to 2 particles to its bottom
-	for (int i = 0; i < gridSize - 2; i++) {
-		for (int j = 0; j < gridSize; j++) {
-			Particle* point1 = particles[(i * gridSize) + j]; 
-			Particle* point2 = particles[((i+2) * gridSize) + j];
+	for (int i = 0; i < nParticles.x - 2; i++) {
+		for (int j = 0; j < nParticles.x; j++) {
+			Particle* point1 = particles[(i * nParticles.x) + j]; 
+			Particle* point2 = particles[((i+2) * nParticles.x) + j];
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 		}
@@ -159,12 +161,12 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const ch
 
 	// initialize the grid using openGL
 	// Generate a vertex array (VAO) and two vertex buffer objects (VBO).
-	glGenVertexArrays(1, &VAO);
+	glGenVertexArrays(1, &clothVAO);
 	glGenBuffers(1, &VBO_pos);
 	glGenBuffers(1, &VBO_normals);
 
 	// Bind the VAO.
-	glBindVertexArray(VAO);
+	glBindVertexArray(clothVAO);
 
 	// Bind to the first VBO - We will use it to store the vertices
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
@@ -255,18 +257,18 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const ch
 	// glDeleteShader(computeShader);
 
 	// Generate the buffers to read and write from in the Compute shader
-	glGenBuffers(1, &computeBufPos[0]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, computeBufPos[0]);
+	glGenBuffers(1, &computePosBuf[0]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, computePosBuf[0]);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * posBufs[0].size(), &posBufs[0], GL_DYNAMIC_READ);
-	glGenBuffers(1, &computeBufPos[1]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, computeBufPos[1]);
+	glGenBuffers(1, &computePosBuf[1]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, computePosBuf[1]);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * posBufs[1].size(), &posBufs[1], GL_DYNAMIC_READ);
 
-	glGenBuffers(1, &computeBufVelo[0]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, computeBufVelo[0]);
+	glGenBuffers(1, &computeVeloBuf[0]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, computeVeloBuf[0]);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * veloBufs[0].size(), &veloBufs[0], GL_DYNAMIC_READ);
-	glGenBuffers(1, &computeBufVelo[1]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeBufVelo[1]);
+	glGenBuffers(1, &computeVeloBuf[1]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeVeloBuf[1]);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * veloBufs[1].size(), &veloBufs[1], GL_DYNAMIC_READ);
 
 	// Unbind the VBOs.
@@ -305,7 +307,7 @@ void Cloth::Draw(const glm::mat4& viewProjMtx, GLFWwindow* window)
 	renderProg.setVec3("material.diffuse_texture1", glm::vec3(0.5f));
 
 	// Bind the VAO
-	glBindVertexArray(VAO);
+	glBindVertexArray(clothVAO);
 
 	// draw the points using triangles, indexed with the EBO
 	glDrawElements(GL_TRIANGLES, triIndices.size(), GL_UNSIGNED_INT, 0);
@@ -343,7 +345,7 @@ void Cloth::renderImGui(GLFWwindow* window)
 
 void Cloth::Update2() {
 	glUseProgram(this->computeShaderProgram);
-	int size = gridSize * gridSize;
+	int size = nParticles.x * nParticles.y;
 
 	for (int i = 0; i < size; ++i) {
 		glDispatchCompute((unsigned int)this->nParticles.x / 10, 
@@ -352,10 +354,10 @@ void Cloth::Update2() {
 
 		// swapping buffers:
 		readBuf = 1 - readBuf;
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, computeBufPos[readBuf]);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, computeBufPos[1-readBuf]);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, computeBufVelo[readBuf]);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeBufVelo[1-readBuf]);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, computePosBuf[readBuf]);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, computePosBuf[1-readBuf]);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, computeVeloBuf[readBuf]);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeVeloBuf[1-readBuf]);
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
@@ -478,7 +480,7 @@ void Cloth::togglePos(glm::vec3 moveAmt)
 {
 	glm::mat4 moveMat = glm::translate(glm::mat4(1.0f), moveAmt);
 	model *= moveMat;
-	for (int i = 0; i < gridSize; i++) {
+	for (int i = 0; i < nParticles.x; i++) {
 		glm::vec3 newPos = moveMat * glm::vec4(particles[i]->getPos(), 1.0f);
 		particles[i]->setPos(newPos);
 	}
@@ -504,7 +506,7 @@ void Cloth::spin(float deg)
 {
 	// Update the model matrix by multiplying a rotation matrix
 	//model = model * glm::rotate(glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f));
-	for (int i = 0; i < gridSize; i++) {
+	for (int i = 0; i < nParticles.x; i++) {
 		glm::mat4 rot(glm::rotate(glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f)));
 		glm::mat4 newTransl(glm::inverse(model));
 		glm::vec3 nPos = model * rot * newTransl * glm::vec4(particles[i]->getPos(), 1.0f);
