@@ -1,6 +1,148 @@
 #include "Cloth.h"
 
-Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::vec3(1.0f)), gridSize(10)
+void Cloth::LoadAndCompileShaders() {
+	renderProg.LoadShaders("src/shaders/clothShader.vert", "src/shaders/clothShader.frag");	
+	GLuint computeShaderID = renderProg.LoadSingleShader("src/shaders/clothCompute.comp", compute);
+	renderProg.LinkShader(computeShaderID);
+}
+
+void Cloth::initializeBuffers() {
+	// Generate the VBOs and EBO 
+	glGenBuffers(7, buff);
+	computePosBuf[0] = buff[0];
+	computePosBuf[1] = buff[1];
+	computeVeloBuf[0] = buff[2];
+	computeVeloBuf[1] = buff[3];
+	normBuf = buff[4];
+	clothEBO = buff[5];
+
+	// PosBuffer 1 & 2
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, computePosBuf[0]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 
+		sizeof(glm::vec4) * posBufs[0].size(), posBufs[0].data(), GL_DYNAMIC_DRAW);
+
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, computePosBuf[1]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 
+	// NULL for 2nd pos buf since we're copying it over from GPU to shader 
+		sizeof(glm::vec4) * posBufs[1].size(), NULL, GL_DYNAMIC_DRAW); 
+
+	// VeloBuffer 1 & 2
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, computeVeloBuf[0]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * veloBufs[0].size(), veloBufs[0].data(), GL_DYNAMIC_COPY);
+
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeVeloBuf[1]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * veloBufs[1].size(), NULL, GL_DYNAMIC_COPY);
+
+	// Index Buffer
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, clothEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * idxBuf.size(), &idxBuf[0], GL_DYNAMIC_COPY);
+
+	// Normal buffer
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, normBuf);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4)* normalBufs.size(), NULL, GL_DYNAMIC_COPY);
+
+	// Generate, and set up VAO
+	glGenVertexArrays(1, &clothVAO);
+	glBindVertexArray(clothVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, computePosBuf[0]);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, normBuf);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, clothEBO);
+
+	// glBindBuffer(GL_ARRAY_BUFFER, computePosBuf[1]);
+	// glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+	// glEnableVertexAttribArray(1);
+
+	// glBindBuffer(GL_ARRAY_BUFFER, computeVeloBuf[0]);
+	// glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+	// glEnableVertexAttribArray(2);
+	
+	// Unbind the VAO
+	glBindVertexArray(0);
+}
+
+Cloth::Cloth(float dur, const char* computeShaderPath) {
+	this->LoadAndCompileShaders();
+
+	glm::vec2 clothSize(4.0f, 4.0f);
+	nParticles = glm::ivec2(30, 30);
+
+	vAir = glm::vec3(15.0f, .0f, -3.0f); // air velocity
+	// Other physical constants
+	springConst = 200.0f; 
+	dampConst = 30.0f; 
+	Cd = 1.020f;
+	rho = 1.225;
+	rest_const = 0.05f;
+	dynamic_fric = 0.60f;
+	float pMass = 0.8f;
+	gotWind = true;
+
+	float dx = clothSize.x / (nParticles.x - 1);
+	float dy = clothSize.y / (nParticles.y - 1);
+
+	// Given a gridSize, we want to set the positions of the particles here 
+	for (int i = nParticles.y - 1; i >= 0; i--) {
+		for (int j = 0; j < nParticles.x; j++) {
+			// force and velo default to 0
+			// randomized z-component starter values
+			float randVal = (rand() % 100 + 1) / 1000.0f; 
+			// particles.push_back(new Particle(glm::vec3(.0f), glm::vec3(.0f), 
+			// 	glm::vec3((float(j) - ((float(gridSize) - 1.0f) / 2.0f)) / 5.0f, (float(i) - ((float(gridSize)- 1.0f) / 2.0f)) / 5.0f, randVal), glm::vec3(.0f,.0f, 1.0f) ,pMass));
+			glm::vec4 p = glm::vec4((j - (nParticles.x - 1) / 2.0f) * dx, i * dy * 2.0f, 0.0f, 1.0f);
+			posBufs[0].push_back(p);
+			posBufs[1].push_back(p);
+			// initialize velocities
+			veloBufs[0].push_back(glm::vec4(.0f));
+			veloBufs[1].push_back(glm::vec4(.0f));
+			normalBufs.push_back(glm::vec4(0.f, 0.f, 1.0f, .0f));
+		}
+	}
+
+	// Populate index buffer for EBO 
+	for (int row = 0; row < nParticles.y - 1; ++row) {
+		for (int col = 0; col < nParticles.x - 1; ++col) {
+			// tri 1
+			idxBuf.push_back(row * nParticles.x + col);
+			idxBuf.push_back(row * nParticles.x + col + 1);
+			idxBuf.push_back((row+1) * nParticles.x + col);
+			// tri 2
+			idxBuf.push_back(row * nParticles.x + col + 1);
+			idxBuf.push_back((row+1) * nParticles.x + col + 1);
+			idxBuf.push_back((row+1) * nParticles.x + col);
+		}
+	}
+	
+	// Initialize the buffers (VAO, VBO, EBO... etc)
+	this->initializeBuffers();
+
+	// activate the shader program 
+	renderProg.use();
+	// pt light uniform values
+	renderProg.setFloat("pt_light.k_constant", 1.0f);
+	renderProg.setFloat("pt_light.k_linear", 1.0f);
+	renderProg.setFloat("pt_light.k_quad", 1.0f);
+	renderProg.setVec4("pt_light.position", glm::vec4(0.0f, 5.0f, -0.5f, 1.0f));
+	renderProg.setVec3("pt_light.ambient", glm::vec3(0.2f, .2f, 0.2f));
+	renderProg.setVec3("pt_light.diffuse", glm::vec3(0.8f, .8f, 0.8f));
+	renderProg.setVec3("pt_light.specular", glm::vec3(1.0f));
+	// dir light
+	renderProg.setVec3("dir_light.ambient", glm::vec3(0.2f, .2f, 0.2f));
+	renderProg.setVec3("dir_light.diffuse", glm::vec3(1.0f));
+	renderProg.setVec3("dir_light.specular", glm::vec3(1.0f));
+	// Material
+	renderProg.setVec3("material.ambient", glm::vec3(1.0f));
+	renderProg.setVec3("material.diffuse", glm::vec3(1.0f));
+	renderProg.setVec3("material.specular", glm::vec3(1.0f));
+}
+
+Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::vec3(1.0f))
 {
 	// viable values: Ks = 100.0f, Kd = 50.0f, mass = 1.1f, Cd = 1.020f
 	// Another viable set of values (?) Ks = 50.0f, Kd = 30.0f, mass = 1.1f, Cd = 1.020f
@@ -9,7 +151,7 @@ Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::
 	glm::vec2 clothSize(4.0f, 4.0f);
 	nParticles = glm::ivec2(30, 30);
 
-	vAir = glm::vec3(15.0f, .0f, -3.0f); // air velocity
+	vAir = glm::vec3(0.1f, .1f, 0.1f); // air velocity
 	// Other physical constants
 	springConst = 200.0f; 
 	dampConst = 30.0f; 
@@ -181,95 +323,14 @@ Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
 	// Generate EBO, bind the EBO to the bound VAO and send the data
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glGenBuffers(1, &clothEBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, clothEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * triIndices.size(), triIndices.data(), GL_STATIC_DRAW);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	// Create compute shader
-	this->nParticles.x = 30;
-	this->nParticles.y = 30;
-	this->readBuf = 0;
-	this->computeShaderProgram = glCreateProgram();
-	this->computeShader = glCreateShader(GL_COMPUTE_SHADER);
-	// Try to read shader codes from the shader file.
-	std::string shaderCode;
-	std::ifstream shaderStream(computeShaderPath, std::ios::in);
-	if (shaderStream.is_open()) 
-	{
-		std::string Line = "";
-		while (getline(shaderStream, Line))
-			shaderCode += "\n" + Line;
-		shaderStream.close();
-	}
-	else 
-	{
-		std::cerr << "Impossible to open " << computeShaderPath << ". "
-			<< "Check to make sure the file exists and you passed in the "
-			<< "right filepath!"
-			<< std::endl;
-		return;
-	}
-
-	GLint Result = GL_FALSE;
-	int InfoLogLength;
-
-	// Compile Shader.
-	std::cerr << "Compiling compute shader: " << computeShaderPath << std::endl;
-	char const * sourcePointer = shaderCode.c_str();
-	glShaderSource(computeShader, 1, &sourcePointer, NULL);
-	glCompileShader(computeShader);
-	
-	// Check Shader.
-	glGetShaderiv(computeShader, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(computeShader, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if (InfoLogLength > 0) 
-	{
-		std::vector<char> shaderErrorMessage(InfoLogLength + 1);
-		glGetShaderInfoLog(computeShader, InfoLogLength, NULL, shaderErrorMessage.data());
-		std::string msg(shaderErrorMessage.begin(), shaderErrorMessage.end());
-		std::cerr << msg << std::endl;
-		return;
-	}
-
-	glAttachShader(computeShaderProgram, computeShader);
-	glLinkProgram(computeShaderProgram);
-	
-	// Check the program.
-	glGetProgramiv(computeShaderProgram, GL_LINK_STATUS, &Result);
-	glGetProgramiv(computeShaderProgram, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if (InfoLogLength > 0) 
-	{
-		std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
-		glGetProgramInfoLog(computeShaderProgram, InfoLogLength, NULL, ProgramErrorMessage.data());
-		std::string msg(ProgramErrorMessage.begin(), ProgramErrorMessage.end());
-		std::cerr << msg << std::endl;
-		glDeleteProgram(computeShaderProgram);
-		return;
-	}
-	else
-	{
-		printf("Successfully linked program!\n");
-	}
-
 	// glDetachShader(computeShaderProgram, computeShader);
 	// glDeleteShader(computeShader);
-
-	// Generate the buffers to read and write from in the Compute shader
-	glGenBuffers(1, &computePosBuf[0]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, computePosBuf[0]);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * posBufs[0].size(), &posBufs[0], GL_DYNAMIC_READ);
-	glGenBuffers(1, &computePosBuf[1]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, computePosBuf[1]);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * posBufs[1].size(), &posBufs[1], GL_DYNAMIC_READ);
-
-	glGenBuffers(1, &computeVeloBuf[0]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, computeVeloBuf[0]);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * veloBufs[0].size(), &veloBufs[0], GL_DYNAMIC_READ);
-	glGenBuffers(1, &computeVeloBuf[1]);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeVeloBuf[1]);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * veloBufs[1].size(), &veloBufs[1], GL_DYNAMIC_READ);
 
 	// Unbind the VBOs.
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -288,29 +349,41 @@ Cloth::~Cloth()
 	glDeleteProgram(renderProg.ID);
 }
 
-void Cloth::Draw(const glm::mat4& viewProjMtx, GLFWwindow* window)
+void Cloth::Draw(const glm::vec3& camPos, const glm::mat4& viewProjMtx, GLFWwindow* window)
 {
 	// activate the shader program 
 	renderProg.use();
-	
-	// light uniform values
-	renderProg.setFloat("point_light.k_constant", 1.0f);
-	renderProg.setFloat("point_light.k_linear", 1.0f);
-	renderProg.setFloat("point_light.k_quad", 1.0f);
-
 	// glActiveTexture(GL_TEXTURE0);
 	// glBindTexture(GL_TEXTURE_2D, clothTextureID);
+
+	// pt light uniform values
+	renderProg.setFloat("pt_light.k_constant", 1.0f);
+	renderProg.setFloat("pt_light.k_linear", 1.0f);
+	renderProg.setFloat("pt_light.k_quad", 1.0f);
+	renderProg.setVec4("pt_light.position", glm::vec4(0.0f, 5.0f, -0.5f, 1.0f));
+	renderProg.setVec3("pt_light.ambient", glm::vec3(0.2f, .2f, 0.2f));
+	renderProg.setVec3("pt_light.diffuse", glm::vec3(0.8f, .8f, 0.8f));
+	renderProg.setVec3("pt_light.specular", glm::vec3(1.0f));
+	// dir light
+	renderProg.setVec3("dir_light.direction", glm::vec3(-2.0f, -8.0f, -4.0));
+	renderProg.setVec3("dir_light.ambient", glm::vec3(0.2f, .2f, 0.2f));
+	renderProg.setVec3("dir_light.diffuse", glm::vec3(0.8f, .8f, 0.8f));
+	renderProg.setVec3("dir_light.specular", glm::vec3(1.0f));
+	// Material
+	renderProg.setVec3("material.diffuse", glm::vec3(1.0f));
+	renderProg.setVec3("material.specular", glm::vec3(1.0f));
+	renderProg.setFloat("material.shininess", 80);
 
 	// get the locations and send the uniforms to the shader 
 	renderProg.setMat4("model", this->model);
 	renderProg.setMat4("viewProj", viewProjMtx);
 	renderProg.setVec3("material.diffuse_texture1", glm::vec3(0.5f));
+	renderProg.setVec3("view_position", camPos);
 
 	// Bind the VAO
 	glBindVertexArray(clothVAO);
-
-	// draw the points using triangles, indexed with the EBO
-	glDrawElements(GL_TRIANGLES, triIndices.size(), GL_UNSIGNED_INT, 0);
+	// glDrawElements(GL_TRIANGLES, triIndices.size(), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, idxBuf.size(), GL_UNSIGNED_INT, 0);
 
 	// Unbind the VAO and shader program
 	glBindVertexArray(0);
@@ -328,7 +401,7 @@ void Cloth::renderImGui(GLFWwindow* window)
 
 	{
 		ImGui::Begin("Cloth Simulation Options");
-		ImGui::SliderFloat("Air Velo X", &getWindVelo().x, -15.0f, 15.0f);
+		ImGui::SliderFloat("Air Velo X", &getWindVelo().x, -3.0f, 3.0f);
 		ImGui::SliderFloat("Air Velo Y", &getWindVelo().y, -15.0f, 15.0f);
 		ImGui::SliderFloat("Air Velo Z", &getWindVelo().z, -15.0f, 15.0f);
 
@@ -344,12 +417,12 @@ void Cloth::renderImGui(GLFWwindow* window)
 }
 
 void Cloth::Update2() {
-	glUseProgram(this->computeShaderProgram);
+	computeProg.use();
 	int size = nParticles.x * nParticles.y;
 
 	for (int i = 0; i < size; ++i) {
-		glDispatchCompute((unsigned int)this->nParticles.x / 10, 
-			(unsigned int)this->nParticles.y / 10, 1);
+		glDispatchCompute((unsigned int)this->nParticles.x / 30, 
+			(unsigned int)this->nParticles.y / 30, 1);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 		// swapping buffers:
@@ -360,8 +433,10 @@ void Cloth::Update2() {
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeVeloBuf[1-readBuf]);
 	}
 
+	renderProg.use();
+	glBindVertexArray(clothVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * posBufs[readBuf].size(), posBufs[readBuf].data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * posBufs[readBuf].size(), posBufs[readBuf].data(), GL_DYNAMIC_DRAW);
 
     // Unbind the VBOs
     glBindBuffer(GL_ARRAY_BUFFER, 0);
