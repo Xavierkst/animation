@@ -25,7 +25,6 @@ struct pointLight {
 };
 
 out vec4 fragColor;
-
 in vec3 fragNormal;
 in vec3 fragPos;
 
@@ -49,14 +48,16 @@ void main()
 	vec3 normal = normalize(fragNormal);
 	vec3 view_dir = normalize(view_position - fragPos);
 	vec3 dir_to_light = normalize(-LightDirection);
-	// vec3 result = calcDirLight(dir_light, material, vec4(fragNormal, .0f), vec4(view_dir, .0f));
 
 	// Diffuse reflectance
-	float diff = max(dot(dir_to_light, normal), .0f);
-	vec3 result = AmbientColor + diff * DiffuseColor * LightColor;
-	vec3 reflectance = result;
+	// vec3 result = vec3(0.2f) * material.diffuse + diff * material.diffuse * dir_light.diffuse;
+	// fragColor = vec4(sqrt(result), 1);
 
-	fragColor = vec4(sqrt(result), 1);
+	float diff = max(dot(dir_to_light, normal), .0f);
+	vec3 result = calcPointLight(pt_light, material, vec4(normal, .0f), vec4(fragPos, 1.0f), vec4(view_dir, .0f));
+	result += calcDirLight(dir_light, material, vec4(normal, .0f), vec4(view_dir, .0f));
+
+	fragColor = vec4(result, 1.0f);
 }
 
 vec3 calcDirLight(dirLight dir_light, Material mat, vec4 normal, vec4 view_dir) {
