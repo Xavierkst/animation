@@ -30,6 +30,9 @@ public:
 	float GetIncline()						{return Incline;}
 
 	const glm::mat4 &GetViewProjectMtx()	{return ViewProjectMtx;}
+	const glm::mat4& GetViewMtx()			{return viewMtx;}
+	const glm::mat4& GetProjectionMtx()		{return projectionMtx;}
+	const glm::vec3& getCamPos()			{return camPos;}
 
 private:
 	// Perspective controls
@@ -45,6 +48,9 @@ private:
 
 	// Computed data
 	glm::mat4 ViewProjectMtx;
+	glm::mat4 viewMtx;
+	glm::mat4 projectionMtx;
+	glm::vec3 camPos;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

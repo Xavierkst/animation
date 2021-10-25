@@ -21,13 +21,16 @@ void Camera::Update() {
 	world=glm::eulerAngleY(glm::radians(-Azimuth)) * glm::eulerAngleX(glm::radians(-Incline)) * world;
 
 	// Compute view matrix (inverse of world matrix)
-	glm::mat4 view=glm::inverse(world);
+	viewMtx=glm::inverse(world);
 
 	// Compute perspective projection matrix
-	glm::mat4 project=glm::perspective(glm::radians(FOV),Aspect,NearClip,FarClip);
+	projectionMtx=glm::perspective(glm::radians(FOV),Aspect,NearClip,FarClip);
 
 	// Compute final view-projection matrix
-	ViewProjectMtx=project * view;
+	ViewProjectMtx=projectionMtx * viewMtx;
+
+	// update eye/Camera position
+	camPos = glm::vec3(viewMtx[3][0], viewMtx[3][1], viewMtx[3][2]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
