@@ -4,12 +4,20 @@ GLuint Shader::LoadSingleShader(const char * shaderFilePath, ShaderType type)
 {
 	// Create a shader id.
 	GLuint shaderID = 0;
-	if (type == vertex)
+	std::string shader_type;
+
+	if (type == vertex) {
 		shaderID = glCreateShader(GL_VERTEX_SHADER);
-	else if (type == fragment)
+		shader_type = "vertex";
+	}
+	else if (type == fragment) {
 		shaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	else if (type == compute)
+		shader_type = "fragment";
+	}
+	else if (type == compute) {
 		shaderID = glCreateShader(GL_COMPUTE_SHADER);
+		shader_type = "compute";
+	}
 
 	// Try to read shader codes from the shader file.
 	std::string shaderCode;
@@ -38,7 +46,8 @@ GLuint Shader::LoadSingleShader(const char * shaderFilePath, ShaderType type)
 	char const * sourcePointer = shaderCode.c_str();
 	glShaderSource(shaderID, 1, &sourcePointer, NULL);
 	glCompileShader(shaderID);
-	
+	checkCompileErrors(shaderID, shader_type);
+
 	// Check Shader.
 	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &Result);
 	glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
@@ -56,6 +65,8 @@ GLuint Shader::LoadSingleShader(const char * shaderFilePath, ShaderType type)
 			printf("Successfully compiled vertex shader!\n");
 		else if (type == fragment) 
 			printf("Successfully compiled fragment shader!\n");
+		else if (type == compute) 
+			printf("Successfully compiled compute shader!\n");
 	}
 
 	return shaderID;
@@ -73,7 +84,7 @@ GLuint Shader::LoadShaders(const char * vertexFilePath, const char * fragmentFil
 
 
 	// Check both shaders.
-	if (vertexShaderID == 0 || fragmentShaderID == 0 || computeShaderID == 0) return 0;
+	if (vertexShaderID == 0 || fragmentShaderID == 0) return 0;
 
 	GLint Result = GL_FALSE;
 	int InfoLogLength;
@@ -109,7 +120,6 @@ GLuint Shader::LoadShaders(const char * vertexFilePath, const char * fragmentFil
 	glDetachShader(programID, fragmentShaderID);
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
-
 	this->ID = programID;
 
 	return programID;
@@ -158,7 +168,7 @@ void Shader::checkCompileErrors(unsigned int ID, std::string type)
 		glGetShaderiv(ID, GL_COMPILE_STATUS, &success);
 		if (!success) {
 			glGetShaderInfoLog(ID, 1024, NULL, infoLog);
-			std::cout << "ERROR::SHADER::VERTEX::ERROR of type: " << type << "\n" << infoLog << std::endl;
+			std::cout << "ERROR::SHADER::ERROR of type: " << type << "\n" << infoLog << std::endl;
 		}
 	} 
 	else {
