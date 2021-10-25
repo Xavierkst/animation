@@ -1,9 +1,10 @@
 #include "Cloth.h"
 
-Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize): model(glm::mat4(1.0f)), color(glm::vec3(1.0f)), gridSize(gSize)
+Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize, const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::vec3(1.0f)), gridSize(gSize)
 {
 	// viable values: Ks = 100.0f, Kd = 50.0f, mass = 1.1f, Cd = 1.020f
 	// Another viable set of values (?) Ks = 50.0f, Kd = 30.0f, mass = 1.1f, Cd = 1.020f
+	renderProg.LoadShaders("src/shaders/clothShader.vert", "src/shaders/clothShader.frag");	
 
 	vAir = glm::vec3(15.0f, .0f, -3.0f); // air velocity
 	// Other physical constants
@@ -144,6 +145,18 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize): model(g
 	}
 	// All springs have been linked up at this point
 
+	// send the positions to the position and velocity buffers:
+	this->posBufs.push_back(std::vector<glm::vec4>());
+	this->posBufs.push_back(std::vector<glm::vec4>());
+	this->veloBufs.push_back(std::vector<glm::vec4>());
+	this->veloBufs.push_back(std::vector<glm::vec4>());
+	for (int i = 0; i < particlePos.size(); ++i) {
+		posBufs[0].push_back(glm::vec4(particlePos[i], 1.0f));
+		posBufs[1].push_back(glm::vec4(particlePos[i], 1.0f));
+		veloBufs[0].push_back(glm::vec4(0.0f));
+		veloBufs[1].push_back(glm::vec4(0.0f));
+	}
+
 	// initialize the grid using openGL
 	// Generate a vertex array (VAO) and two vertex buffer objects (VBO).
 	glGenVertexArrays(1, &VAO);
@@ -172,6 +185,90 @@ Cloth::Cloth(glm::vec3 pForce, glm::vec3 pVelo, float pMass, int gSize): model(g
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+	// Create compute shader
+	this->nParticles.x = 30;
+	this->nParticles.y = 30;
+	this->readBuf = 0;
+	this->computeShaderProgram = glCreateProgram();
+	this->computeShader = glCreateShader(GL_COMPUTE_SHADER);
+	// Try to read shader codes from the shader file.
+	std::string shaderCode;
+	std::ifstream shaderStream(computeShaderPath, std::ios::in);
+	if (shaderStream.is_open()) 
+	{
+		std::string Line = "";
+		while (getline(shaderStream, Line))
+			shaderCode += "\n" + Line;
+		shaderStream.close();
+	}
+	else 
+	{
+		std::cerr << "Impossible to open " << computeShaderPath << ". "
+			<< "Check to make sure the file exists and you passed in the "
+			<< "right filepath!"
+			<< std::endl;
+		return;
+	}
+
+	GLint Result = GL_FALSE;
+	int InfoLogLength;
+
+	// Compile Shader.
+	std::cerr << "Compiling compute shader: " << computeShaderPath << std::endl;
+	char const * sourcePointer = shaderCode.c_str();
+	glShaderSource(computeShader, 1, &sourcePointer, NULL);
+	glCompileShader(computeShader);
+	
+	// Check Shader.
+	glGetShaderiv(computeShader, GL_COMPILE_STATUS, &Result);
+	glGetShaderiv(computeShader, GL_INFO_LOG_LENGTH, &InfoLogLength);
+	if (InfoLogLength > 0) 
+	{
+		std::vector<char> shaderErrorMessage(InfoLogLength + 1);
+		glGetShaderInfoLog(computeShader, InfoLogLength, NULL, shaderErrorMessage.data());
+		std::string msg(shaderErrorMessage.begin(), shaderErrorMessage.end());
+		std::cerr << msg << std::endl;
+		return;
+	}
+
+	glAttachShader(computeShaderProgram, computeShader);
+	glLinkProgram(computeShaderProgram);
+	
+	// Check the program.
+	glGetProgramiv(computeShaderProgram, GL_LINK_STATUS, &Result);
+	glGetProgramiv(computeShaderProgram, GL_INFO_LOG_LENGTH, &InfoLogLength);
+	if (InfoLogLength > 0) 
+	{
+		std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
+		glGetProgramInfoLog(computeShaderProgram, InfoLogLength, NULL, ProgramErrorMessage.data());
+		std::string msg(ProgramErrorMessage.begin(), ProgramErrorMessage.end());
+		std::cerr << msg << std::endl;
+		glDeleteProgram(computeShaderProgram);
+		return;
+	}
+	else
+	{
+		printf("Successfully linked program!\n");
+	}
+
+	// glDetachShader(computeShaderProgram, computeShader);
+	// glDeleteShader(computeShader);
+
+	// Generate the buffers to read and write from in the Compute shader
+	glGenBuffers(1, &computeBufPos[0]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, computeBufPos[0]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * posBufs[0].size(), &posBufs[0], GL_DYNAMIC_READ);
+	glGenBuffers(1, &computeBufPos[1]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, computeBufPos[1]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * posBufs[1].size(), &posBufs[1], GL_DYNAMIC_READ);
+
+	glGenBuffers(1, &computeBufVelo[0]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, computeBufVelo[0]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * veloBufs[0].size(), &veloBufs[0], GL_DYNAMIC_READ);
+	glGenBuffers(1, &computeBufVelo[1]);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeBufVelo[1]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * veloBufs[1].size(), &veloBufs[1], GL_DYNAMIC_READ);
+
 	// Unbind the VBOs.
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -185,25 +282,27 @@ Cloth::~Cloth()
 	for (int k = 0; k < springs.size(); k++) {
 		delete springs[k];
 	}
+
+	glDeleteProgram(renderProg.ID);
 }
 
-void Cloth::Draw(const glm::mat4& viewProjMtx, Shader& shader, GLFWwindow* window)
+void Cloth::Draw(const glm::mat4& viewProjMtx, GLFWwindow* window)
 {
 	// activate the shader program 
-	shader.use();
+	renderProg.use();
 	
 	// light uniform values
-	shader.setFloat("point_light.k_constant", 1.0f);
-	shader.setFloat("point_light.k_linear", 1.0f);
-	shader.setFloat("point_light.k_quad", 1.0f);
+	renderProg.setFloat("point_light.k_constant", 1.0f);
+	renderProg.setFloat("point_light.k_linear", 1.0f);
+	renderProg.setFloat("point_light.k_quad", 1.0f);
 
 	// glActiveTexture(GL_TEXTURE0);
 	// glBindTexture(GL_TEXTURE_2D, clothTextureID);
 
 	// get the locations and send the uniforms to the shader 
-	shader.setMat4("model", this->model);
-	shader.setMat4("viewProj", viewProjMtx);
-	shader.setVec3("material.diffuse_texture1", glm::vec3(0.5f));
+	renderProg.setMat4("model", this->model);
+	renderProg.setMat4("viewProj", viewProjMtx);
+	renderProg.setVec3("material.diffuse_texture1", glm::vec3(0.5f));
 
 	// Bind the VAO
 	glBindVertexArray(VAO);
@@ -242,8 +341,28 @@ void Cloth::renderImGui(GLFWwindow* window)
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void Update2(float delta_t, glm::vec3 g, FloorTile* floor, int steps) {
+void Cloth::Update2() {
+	glUseProgram(this->computeShaderProgram);
+	int size = gridSize * gridSize;
 
+	for (int i = 0; i < size; ++i) {
+		glDispatchCompute((unsigned int)this->nParticles.x / 10, 
+			(unsigned int)this->nParticles.y / 10, 1);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+		// swapping buffers:
+		readBuf = 1 - readBuf;
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, computeBufPos[readBuf]);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, computeBufPos[1-readBuf]);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, computeBufVelo[readBuf]);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeBufVelo[1-readBuf]);
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * posBufs[readBuf].size(), posBufs[readBuf].data(), GL_DYNAMIC_DRAW);
+
+    // Unbind the VBOs
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 // Updates all the forces acting on the cloth particles
