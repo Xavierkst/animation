@@ -12,27 +12,24 @@
 
 #include "../../stb_image/stb_image.h"
 
+struct Vertex {
+	glm::vec3 pos;
+	glm::vec3 normal;
+	glm::vec2 texture_coord;
+};
+
 class Cloth {
 private:
-
-	Shader renderProg, computeProg;
+	
+	Shader renderProg; // Cloth rendering shader program
 	GLuint clothVAO; 
-	GLuint VBO_pos, VBO_normals;
+	GLuint clothVBO;
 	GLuint clothEBO;
-	GLuint clothTexture[5];
+	GLuint clothTexture[5]; // Arbitrarily decided for 5 cloth texture units
 
-	Shader lightRenderProg;
-	GLuint lightSourcePos;
-	GLuint lightSourceVAO;
-
-	GLuint normBuf;
-	GLuint computeShaderID;
-	glm::ivec2 nParticles;
-	int readBuf;
-
+	glm::ivec2 nParticles; // Num of particles in the x and y dimensions
 	glm::mat4 model; // cloth model transform 
-	glm::mat4 transfMat; // keeps track of all transforms on the cloth so far
-	glm::vec3 color; // cloth color
+	glm::mat4 transfMat; // keeps track of all translations on the cloth 
 
 	/* Physical constants */
 	glm::vec3 vAir; // air velocity
@@ -44,27 +41,29 @@ private:
 	std::vector<SpringDamper*> springs;
 	std::vector<Triangle> triangles; // triangle vector	
 	std::vector<int> triIndices; // Indices for the EBO 
-	std::vector<glm::vec3> particlePos; // reflects the positions in "particles"
-	std::vector<glm::vec3> particleNorm; // reflects the normals in "particles"
+	std::vector<Vertex> vertices; // contains Position, Normal, texCoord
 
-	// Compute shader vars
+	// Compute shader variables -- NOT IN USE -- 
+	Shader computeProg; // compute shader program
 	std::vector<std::vector<glm::vec4>> posBufs; 
 	std::vector<std::vector<glm::vec4>> veloBufs; 
-	std::vector<glm::ivec2> texCoords; 
-
 	std::vector<glm::vec4> normalBufs; 
 	std::vector<unsigned int> idxBuf;
 	GLuint buff[7];
 	GLuint computePosBuf[2]; // creating VBOs to read and write from the compute buffers
 	GLuint computeVeloBuf[2];
+	GLuint normBuf;
+	GLuint computeShaderID;
+	int readBuf; // toggles bet 1 and 0 to swap computed vertices from comp shader
+
+	// For Rendering Light Cubes in the scene -- not actually part of cloth
+	Shader lightRenderProg;
+	GLuint lightSourcePos;
+	GLuint lightSourceVAO;
 
 public:
 
-	bool gotWind;
-
 	Cloth(const char* computeShaderPath = "src/shaders/clothCompute.comp");
-
-	Cloth(float dur, const char* computeShaderPath = "src/shaders/clothCompute.comp");
 
 	~Cloth();
 
@@ -72,21 +71,11 @@ public:
 
 	void renderImGui(GLFWwindow* window);
 
-	void LoadAndCompileShaders();
-
-	void initializeBuffers();
-
 	// Updates all vertex attributes each frame -- computed on the CPU bef sending to GPU 
 	// integrates motion 'steps' number of times per delta_T
 	void Update(FloorTile* floor, float delta_t, glm::vec3 g = glm::vec3(.0f, -9.82f, 0.f), int steps = 60); 
 
-	// An experimental update() function that uses 'clothCompute.cs' (compute shader)
-	// However, only works for OpenGL version >= 4.2 
-	void Update2(); 
-
 	void togglePos(glm::vec3 moveAmt);
-
-	bool toggleWind();
 
 	void windSpeed(float magnitude);
 
@@ -95,6 +84,20 @@ public:
 	void spin(float deg);
 
 	unsigned int loadTexture(char const* path);
+
+
+	/* --------------  Compute shader functions -- NOT IN USE ----------------- */ 
+
+	// Constructor for vertex processing using compute shader -- NOT IN USE (not working for openGL 3.3)
+	Cloth(float dur, const char* computeShaderPath = "src/shaders/clothCompute.comp");
+
+	void LoadAndCompileShaders();
+
+	void initializeBuffers();
+
+	// An experimental update() function that uses 'clothCompute.cs' (compute shader)
+	// However, only works for OpenGL version >= 4.2 
+	void Update2(); 
 
 };
 #endif

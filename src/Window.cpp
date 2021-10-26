@@ -46,15 +46,6 @@ ParticleSys* Window::particle_sys;
 // Constructors and desctructors 
 bool Window::initializeProgram() {
 
-	// Create a shader program with a vertex shader and a fragment shader.
-	// shaderProgram = windowShaderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
-	// // Check the shader program.
-	// if (!shaderProgram)
-	// {
-	// 	std::cerr << "Failed to initialize shader programs" << std::endl;
-	// 	return false;
-	// }
-
 	return true;
 }
 
@@ -88,9 +79,6 @@ void Window::cleanUp()
 	delete skin; // skin has skeleton destructor
 	delete particle_sys;
 	delete cloth;
-	
-	// Delete the shader program.
-	// glDeleteProgram(shaderProgram);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +186,8 @@ void Window::idleCallback()
 void Window::displayCallback(GLFWwindow* window)
 {	
 	// Clear the color and depth buffers.
-	glClearColor(.0f, .0f, .0f, 1.0f); // background color 
+	glClearColor(.05, .05, .05, 1.0f); // background color 
+	// glClearColor(.0f, .0f, .0f, 1.0f); // background color 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
 	// Render skin
@@ -255,10 +244,6 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 		case GLFW_KEY_X: 
 			cloth->togglePos(glm::vec3(.0f, 1.0f, .0f));
 			break;
-		case GLFW_KEY_F: {
-			cloth->toggleWind();
-			break;
-		}
 		case GLFW_KEY_E: 
 			cloth->windSpeed(-3.0f);
 			break;		
@@ -281,7 +266,6 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 		default:
 			break;
 		}
-
 	}
 }
 

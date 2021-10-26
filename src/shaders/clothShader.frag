@@ -54,7 +54,7 @@ void main()
 	vec3 result; 
 	result = calcPointLight(pt_light1, material, vec4(normal, .0f), vec4(fragPos, 1.0f), vec4(view_dir, .0f));
 	result += calcPointLight(pt_light2, material, vec4(normal, .0f), vec4(fragPos, 1.0f), vec4(view_dir, .0f));
-	// result += calcDirLight(dir_light, material, vec4(normal, .0f), vec4(view_dir, .0f));
+	result += calcDirLight(dir_light, material, vec4(normal, .0f), vec4(view_dir, .0f));
 
 	fragColor = vec4(result, 1.0f);
 	// fragColor = vec4(texture(material.texture_diffuse1, tex_coord));
