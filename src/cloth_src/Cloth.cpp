@@ -11,7 +11,7 @@ Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::
 
 	glm::vec2 clothSize(4.0f, 4.0f);
 	nParticles = glm::ivec2(30, 30);
-	vAir = glm::vec3(0.1f, .1f, 0.1f); // air velocity
+	vAir = glm::vec3(0.001f, .001f, 0.001f); // air velocity
 
 	// 1. viable values: Ks = 100.0f, Kd = 50.0f, mass = 1.1f, Cd = 1.020f
 	// 2. Another viable set of values (?) Ks = 50.0f, Kd = 30.0f, mass = 1.1f, Cd = 1.020f
@@ -170,7 +170,10 @@ Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
 	// Bind the texture coord buffer object
-	clothTextureID = loadTexture("../textures/clothFabric.png");
+	clothTextureID = loadTexture("src/textures/redFabric.jpg");
+	renderProg.use();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, clothTextureID);
 
 	// Generate EBO, bind the EBO to the bound VAO and send the data
 	glGenBuffers(1, &clothEBO);
@@ -343,9 +346,18 @@ void Cloth::Draw(const glm::vec3& camPos, const glm::mat4& viewProjMtx, GLFWwind
 {
 	// activate the shader program 
 	renderProg.use();
-
-	// glActiveTexture(GL_TEXTURE0);
-	// glBindTexture(GL_TEXTURE_2D, clothTextureID);
+	// Set the active texture unit 
+	// (even tho by default tex-unit 0 is alr activated)
+	// Material
+	renderProg.setInt("material.texture_diffuse1", 0);
+	renderProg.setInt("material.texture_specular1", 1);
+	// renderProg.setFloat("material.texture_diffuse1", 1);
+	renderProg.setFloat("material.shininess", 5);
+	// renderProg.setFloat("material.texture_diffse1", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, this->clothTextureID);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, this->clothTextureID);
 
 	// pt light uniform values
 	renderProg.setFloat("pt_light.k_constant", 1.0f);
@@ -360,15 +372,12 @@ void Cloth::Draw(const glm::vec3& camPos, const glm::mat4& viewProjMtx, GLFWwind
 	renderProg.setVec3("dir_light.ambient", glm::vec3(0.2f, .2f, 0.2f));
 	renderProg.setVec3("dir_light.diffuse", glm::vec3(0.8f, .8f, 0.8f));
 	renderProg.setVec3("dir_light.specular", glm::vec3(1.0f));
-	// Material
-	renderProg.setVec3("material.diffuse", glm::vec3(1.0f));
-	renderProg.setVec3("material.specular", glm::vec3(1.0f));
-	renderProg.setFloat("material.shininess", 80);
+	// renderProg.setVec3("material.diffuse", glm::vec3(1.0f));
+	// renderProg.setVec3("material.specular", glm::vec3(1.0f));
 
 	// get the locations and send the uniforms to the shader 
 	renderProg.setMat4("model", this->model);
 	renderProg.setMat4("viewProj", viewProjMtx);
-	renderProg.setVec3("material.diffuse_texture1", glm::vec3(0.5f));
 	renderProg.setVec3("view_position", camPos);
 
 	// Bind the VAO
@@ -383,6 +392,7 @@ void Cloth::Draw(const glm::vec3& camPos, const glm::mat4& viewProjMtx, GLFWwind
 	this->renderImGui(window);
 }
 
+// Render the GUI interface with sliders for real-time toggling
 void Cloth::renderImGui(GLFWwindow* window)
 {
 	// Start the Dear ImGui frame
@@ -409,10 +419,11 @@ void Cloth::renderImGui(GLFWwindow* window)
 
 // Updates all the forces acting on the cloth particles
 // by iterating thru every particle each update
-void Cloth::Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps)
+void Cloth::Update(FloorTile* floor, float delta_t, glm::vec3 g, int steps)
 {
-	// Update cloth pos and norm accordingly with
-	// particlePos and particleNorm
+	
+	// convert delta_t from ms to seconds and break dt into 'steps' number of time steps 
+	float dt = delta_t / (float)(CLOCKS_PER_SEC * steps);
 	for (int j = 0; j < steps; j++) {
 		// for each particle, apply gravity --
 		// and zero out the normal for aerodynamic part below
@@ -456,7 +467,7 @@ void Cloth::Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps)
 			particles[i]->setNorm(glm::normalize(particles[i]->getNorm()));
 			particleNorm[i] = particles[i]->getNorm();
 			// integ. motion
-			particlePos[i] = particles[i]->integrateMotion(delta_t);
+			particlePos[i] = particles[i]->integrateMotion(dt);
 
 			// After integrating motion, check if collided with objects 
 				// in this case, FloorTile
@@ -498,8 +509,8 @@ void Cloth::Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps)
 					particlePos[i].y = particlePos[i].y + 
 						(floor->getYPos() - 1.0f * particlePos[i].y) + 0.001f;
 				}
-			}
 		}
+	}
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * particlePos.size(), particlePos.data(), GL_DYNAMIC_DRAW);
@@ -509,55 +520,55 @@ void Cloth::Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps)
 		
 		// Unbind the VBOs
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+// An experimental update() function that uses clothCompute.cs (the cloth compute shader)
+// However, only works for OpenGL version >= 4.2 
+void Cloth::Update2() {
+	computeProg.use();
+	int size = nParticles.x * nParticles.y;
+
+	for (int i = 0; i < size; ++i) {
+		glDispatchCompute((unsigned int)this->nParticles.x / 30, 
+			(unsigned int)this->nParticles.y / 30, 1);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+		// swapping buffers:
+		readBuf = 1 - readBuf;
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, computePosBuf[readBuf]);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, computePosBuf[1-readBuf]);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, computeVeloBuf[readBuf]);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeVeloBuf[1-readBuf]);
 	}
 
-	// An experimental update() function that uses clothCompute.cs (the cloth compute shader)
-	// However, only works for OpenGL version >= 4.2 
-	void Cloth::Update2() {
-		computeProg.use();
-		int size = nParticles.x * nParticles.y;
+	renderProg.use();
+	glBindVertexArray(clothVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * posBufs[readBuf].size(), posBufs[readBuf].data(), GL_DYNAMIC_DRAW);
 
-		for (int i = 0; i < size; ++i) {
-			glDispatchCompute((unsigned int)this->nParticles.x / 30, 
-				(unsigned int)this->nParticles.y / 30, 1);
-			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+	// Unbind the VBOs
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
 
-			// swapping buffers:
-			readBuf = 1 - readBuf;
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, computePosBuf[readBuf]);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, computePosBuf[1-readBuf]);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, computeVeloBuf[readBuf]);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, computeVeloBuf[1-readBuf]);
-		}
-
-		renderProg.use();
-		glBindVertexArray(clothVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * posBufs[readBuf].size(), posBufs[readBuf].data(), GL_DYNAMIC_DRAW);
-
-		// Unbind the VBOs
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+void Cloth::togglePos(glm::vec3 moveAmt)
+{
+	glm::mat4 moveMat = glm::translate(glm::mat4(1.0f), moveAmt);
+	model *= moveMat;
+	for (int i = 0; i < nParticles.x; i++) {
+		glm::vec3 newPos = moveMat * glm::vec4(particles[i]->getPos(), 1.0f);
+		particles[i]->setPos(newPos);
 	}
+}
 
-	void Cloth::togglePos(glm::vec3 moveAmt)
-	{
-		glm::mat4 moveMat = glm::translate(glm::mat4(1.0f), moveAmt);
-		model *= moveMat;
-		for (int i = 0; i < nParticles.x; i++) {
-			glm::vec3 newPos = moveMat * glm::vec4(particles[i]->getPos(), 1.0f);
-			particles[i]->setPos(newPos);
-		}
-	}
+bool Cloth::toggleWind()
+{
+	this->gotWind = !this->gotWind;
+	return this->gotWind;
+}
 
-	bool Cloth::toggleWind()
-	{
-		this->gotWind = !this->gotWind;
-		return this->gotWind;
-	}
-
-	void Cloth::windSpeed(float magnitude)
-	{
-		vAir += magnitude * glm::vec3(1.0f);
+void Cloth::windSpeed(float magnitude)
+{
+	vAir += magnitude * glm::vec3(1.0f);
 }
 
 glm::vec3& Cloth::getWindVelo()

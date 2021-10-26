@@ -72,7 +72,8 @@ public:
 	void initializeBuffers();
 
 	// Updates all vertex attributes each frame -- computed on the CPU bef sending to GPU 
-	void Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps); 
+	// integrates motion 'steps' number of times per delta_T
+	void Update(FloorTile* floor, float delta_t, glm::vec3 g = glm::vec3(.0f, -9.82f, 0.f), int steps = 60); 
 
 	// An experimental update() function that uses 'clothCompute.cs' (compute shader)
 	// However, only works for OpenGL version >= 4.2 
