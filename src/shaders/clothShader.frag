@@ -34,7 +34,8 @@ vec3 LightDirection = vec3(-2.0f, -8.0f, -4.0);
 vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
 vec3 DiffuseColor = vec3(1.0f, 1.0f, 1.0f);	
 
-uniform pointLight pt_light;
+uniform pointLight pt_light1;
+uniform pointLight pt_light2;
 uniform dirLight dir_light;
 uniform Material material;
 uniform vec3 view_position;
@@ -57,7 +58,8 @@ void main()
 	// fragColor = vec4(sqrt(result), 1);
 
 	vec3 result; 
-	result = calcPointLight(pt_light, material, vec4(normal, .0f), vec4(fragPos, 1.0f), vec4(view_dir, .0f));
+	result = calcPointLight(pt_light1, material, vec4(normal, .0f), vec4(fragPos, 1.0f), vec4(view_dir, .0f));
+	// result = calcPointLight(pt_light2, material, vec4(normal, .0f), vec4(fragPos, 1.0f), vec4(view_dir, .0f));
 	result += calcDirLight(dir_light, material, vec4(normal, .0f), vec4(view_dir, .0f));
 
 	fragColor = vec4(result, 1.0f);
@@ -92,9 +94,9 @@ vec3 calcPointLight(pointLight point_light, Material mat, vec4 normal, vec4 frag
 	
 	// Point lights have to be attenuated, since dist to light is some finite distance
 	float attenuation = 1.0 / (point_light.k_constant + point_light.k_linear * dist_to_light + point_light.k_quad * pow(dist_to_light, 2.0f));
-	ambient *= attenuation;
-	diffuse *= attenuation;
-	specular *= attenuation;
+	// ambient *= attenuation;
+	// diffuse *= attenuation;
+	// specular *= attenuation;
 	vec3 result = ambient + diffuse + specular; 
 	
 	return result;
