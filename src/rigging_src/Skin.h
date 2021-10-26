@@ -2,9 +2,9 @@
 #define _Skin_H_
 
 #include "../cloth_src/Triangle.h"
-#include "Vertex.h"
 #include "Skeleton.h"
 #include <iostream>
+
 class Skin {
 private:
 	GLuint VAO;

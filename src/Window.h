@@ -1,18 +1,15 @@
 #ifndef _WINDOW_H_
 #define _WINDOW_H_
 
-// we activate some section of the stb_image.h functions -- essentially turning it into a .cpp file 
-#include "main.h"
 #include "shader.h"
 #include "Camera.h"
 #include "rigging_src/Skin.h"
-#include <glm/gtx/string_cast.hpp>
 #include "rigging_src/AnimationPlayer.h"
 #include "cloth_src/Cloth.h"
-#include "FloorTile.h"
 #include "particle_sys_src/ParticleSys.h"
-#include <time.h>
 
+#include <time.h>
+#include <glm/gtx/string_cast.hpp>
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_impl_glfw.h"
 #include "../imgui/imgui_impl_opengl3.h"
@@ -63,8 +60,6 @@ public:
 	static void imguiCallback(GLFWwindow* window); 
 	static void imguiCleanUp();
 	
-	// Loading textures
-	static unsigned int loadTexture(char const* path);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

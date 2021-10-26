@@ -1,13 +1,5 @@
 #include "Triangle.h"
 
-//Triangle::Triangle(int v1, int v2, int v3)
-//{
-//    triVerts.push_back(v1);
-//    triVerts.push_back(v2);
-//    triVerts.push_back(v3);
-//
-//}
-
 Triangle::Triangle(Particle* part1, Particle* part2, Particle* part3)
 {
     p1 = part1; 

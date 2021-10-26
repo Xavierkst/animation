@@ -2,7 +2,6 @@
 #define PARTICLE_SYS_H_
 
 #include "../Particle.h"
-#include "../Core.h"
 #include "../FloorTile.h"
 
 class ParticleSys {
