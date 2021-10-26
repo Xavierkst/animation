@@ -3,13 +3,6 @@
 
 #include "core.h"
 
-// struct Vertex {
-// 	glm::vec3 pos;
-// 	glm::vec3 normal;
-// 	glm::vec2 texCoord;
-// 	glm::vec3 color;
-// };
-
 class Particle {
 private:
 	glm::vec3 force;

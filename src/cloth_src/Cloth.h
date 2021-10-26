@@ -10,45 +10,48 @@
 #include <fstream>
 #include <sstream>
 
+#include "../../stb_image/stb_image.h"
+
 class Cloth {
 private:
 
-	Shader renderProg, computeProg, computeProgNorm;
+	Shader renderProg, computeProg;
 	GLuint clothVAO; 
 	GLuint VBO_pos, VBO_normals;
 	GLuint clothEBO;
 	GLuint clothTextureID;
 
-	GLuint buff[7];
-	GLuint computePosBuf[2]; // creating VBOs to read and write from the compute buffers
-	GLuint computeVeloBuf[2];
 	GLuint normBuf;
 	GLuint computeShaderID;
-	glm::vec2 nParticles;
+	glm::ivec2 nParticles;
 	int readBuf;
 
-	glm::mat4 model; // cloth model matrix (applies to all vertices of the cloth)
-	glm::vec3 color; // cloth's color
+	glm::mat4 model; // cloth model transform 
+	glm::vec3 color; // cloth color
 
-	int numSprings; // numsprings: (gridSize-1)*(gridSize)*2 + (gridSize-1)*(gridSize-1)*2   which are the horiz, vert and diagonals springs
-	// int gridSize; // how big it should be
-
-	glm::vec3 vAir; // air velo
-	float springConst, dampConst; // physical consts
-	float rho, Cd, rest_const, dynamic_fric; // other physical consts
+	/* Physical constants */
+	glm::vec3 vAir; // air velocity
+	float springConst, dampConst; 
+	float rho, Cd, rest_const, dynamic_fric; 
 	
 	// Cloth has an array of Particles, Triangles, and springs
 	std::vector<Particle*> particles;
 	std::vector<SpringDamper*> springs;
 	std::vector<Triangle> triangles; // triangle vector	
-
 	std::vector<int> triIndices; // Indices for the EBO 
 	std::vector<glm::vec3> particlePos; // reflects the positions in "particles"
 	std::vector<glm::vec3> particleNorm; // reflects the normals in "particles"
+
+	// Compute shader vars
 	std::vector<std::vector<glm::vec4>> posBufs; 
 	std::vector<std::vector<glm::vec4>> veloBufs; 
+	std::vector<glm::ivec2> texCoords; 
+
 	std::vector<glm::vec4> normalBufs; 
 	std::vector<unsigned int> idxBuf;
+	GLuint buff[7];
+	GLuint computePosBuf[2]; // creating VBOs to read and write from the compute buffers
+	GLuint computeVeloBuf[2];
 
 public:
 
@@ -68,9 +71,11 @@ public:
 
 	void initializeBuffers();
 
-	// pass in time, and grav force (and maybe wind velocity later?)
+	// Updates all vertex attributes each frame -- computed on the CPU bef sending to GPU 
 	void Update(float delta_t, glm::vec3 g, FloorTile* floor, int steps); 
 
+	// An experimental update() function that uses 'clothCompute.cs' (compute shader)
+	// However, only works for OpenGL version >= 4.2 
 	void Update2(); 
 
 	void togglePos(glm::vec3 moveAmt);
@@ -84,6 +89,8 @@ public:
 	void spin(float deg);
 
 	void setClothTextureID(GLuint texID);
+
+	unsigned int loadTexture(char const* path);
 
 };
 #endif

@@ -58,9 +58,8 @@ bool Window::initializeProgram() {
 
 	// Create a shader program with a vertex shader and a fragment shader.
 	shaderProgram = windowShaderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
-	clothShaderProgram = clothShader.LoadShaders("src/shaders/clothShader.vert", "src/shaders/clothShader.frag", "shaders/computeShader.comp");
 	// Check the shader program.
-	if (!shaderProgram || !clothShaderProgram)
+	if (!shaderProgram)
 	{
 		std::cerr << "Failed to initialize shader programs" << std::endl;
 		return false;
@@ -71,29 +70,21 @@ bool Window::initializeProgram() {
 
 bool Window::initializeObjects()
 {
-	// Create a cube
-	//cube = new Cube();
-
 	// Create a skin and its skeleton, pass in files for parsing
 	skin = new Skin("src/animations/wasp/wasp.skin", "src/animations/wasp/wasp.skel");
+	// clip = new AnimationClip();
+	// clip->Load("src/animations/wasp/wasp_walk.anim");
+	// player = new AnimationPlayer(clip, skin->getSkeleton());
 
-	clip = new AnimationClip();
-	clip->Load("src/animations/wasp/wasp_walk.anim");
-	player = new AnimationPlayer(clip, skin->getSkeleton());
-
-	// Added 3 more dofs in the front for movement of 
-	// root joint i.e. idx 0, 1, 2, hence starting at idx 3
-
+	// Time initializer (to calculate dt in idleCallBack())
 	time1 = clock();
 
-	// Cloth: force, velo, mass, gridsize (int)
+	// Cloth
 	clothMass = 0.8f;
 	grid_size = 30;
-	// cloth = new Cloth(glm::vec3(.0f), glm::vec3(.0f), clothMass, grid_size);
 	cloth = new Cloth();
-	// cloth->setClothTextureID(loadTexture("textures/clothFabric.png"));
-	computeShaderPath = "shaders/clothCompute.comp";
 
+	// Floor tile
 	fSize = 30;
 	the_floor = new FloorTile(fSize);
 
@@ -107,16 +98,15 @@ bool Window::initializeObjects()
 	// Particle system
 	particle_sys = new ParticleSys(10000);
 
-
 	return true;
 }
 
 void Window::cleanUp()
 {
 	Window::imguiCleanUp();
-	// Deallcoate the objects.
-	//delete cube;
 	delete skin; // skin has skeleton destructor
+	delete particle_sys;
+	delete cloth;
 	
 	// Delete the shader program.
 	glDeleteProgram(shaderProgram);
@@ -218,44 +208,30 @@ void Window::idleCallback()
 	float dt = (new_t - time1);
 	time1 = new_t;
 
-	//cube->update();
-	
-	// Update the skin 
-	// skin->Update(glm::mat4(1.0f));
-	
-	//skin->getSkeleton()->Update(glm::mat4(1.0f));
-	// Update AnimationPlayer for skin
-	//player->Update(dt / CLOCKS_PER_SEC);
-
-	// Update Cloth
+	// Update Cloth vertices each frame
 	int tot_steps = 60;
-	cloth->Update((dt/ (CLOCKS_PER_SEC * tot_steps)), gravForce, the_floor, tot_steps); // update gravitational force each instance
-
-	// Update particles 
-	//particle_sys->Update(0.0006f, the_floor);
+	cloth->Update((dt/ (CLOCKS_PER_SEC * tot_steps)), gravForce, the_floor, tot_steps); 
 }
 
 void Window::displayCallback(GLFWwindow* window)
 {	
 	// Clear the color and depth buffers.
+	glClearColor(.0f, .0f, .0f, 1.0f); // background color 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
-
-	// Render the object.
-	//cube->draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
 
 	// Render skin
 	// skin->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
 	// skin->getSkeleton()->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
 
 	// the_floor->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
-	cloth->Draw(Cam->GetViewProjectMtx(), clothShader, window);
+
+	cloth->Draw(Cam->getCamPos(),Cam->GetViewProjectMtx(), window);
+
 	//particle_sys->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
 
 	// Gets events, including input such as keyboard and mouse or window resizing.
 	glfwPollEvents();
 
-	// generate the ImGui interface
-	//Window::imguiCallback(window);
 	// Swap buffers.
 	glfwSwapBuffers(window);
 }
@@ -314,10 +290,9 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 			cloth->spin(-30.0f);
 			break;
 		case GLFW_KEY_ESCAPE:
-			// Close the window. This causes the program to also terminate.
+			// Close the window. Causes the program to also terminate.
 			glfwSetWindowShouldClose(window, GL_TRUE);
 			break;
-
 		case GLFW_KEY_R:
 			resetCamera();
 			break;
@@ -366,40 +341,4 @@ void Window::imguiCleanUp() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
-
-// Loading textures
-// unsigned int Window::loadTexture(char const* path) {
-// 	unsigned int textureID;
-// 	int img_width, img_ht, num_channels;
-// 	glGenTextures(1, &textureID);
-// 	glBindTexture(GL_TEXTURE_2D, textureID);
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-// 
-// 	unsigned char* image_data = stbi_load(path, &img_width, &img_ht, &num_channels, 0);
-// 	if (image_data) {
-// 		GLenum format;
-// 		if (num_channels == 1)
-// 			format = GL_RED;
-// 		else if (num_channels == 3)
-// 			format = GL_RGB;
-// 		else if (num_channels == 4)
-// 			format = GL_RGBA;
-// 
-// 		// copy the data to the texture obj's buffer
-// 		glTexImage2D(GL_TEXTURE_2D, 0, format, img_width, img_ht, 0, format, GL_UNSIGNED_BYTE, image_data);
-// 		// generate the diff resolutions of the texture
-// 		glGenerateMipmap(GL_TEXTURE_2D); 
-// 	}
-// 	else {
-// 		std::cout << "Failed to load texture" << std::endl;
-// 	}
-// 	// free data pointed to by char ptr--its alr sent to GPU
-// 	stbi_image_free(image_data);
-// 
-// 	return textureID;
-// }
-
 ////////////////////////////////////////////////////////////////////////////////

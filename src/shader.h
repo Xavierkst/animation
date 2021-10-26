@@ -1,5 +1,5 @@
-#ifndef SHADER_HPP
-#define SHADER_HPP
+#ifndef _SHADER_H_
+#define _SHADER_H_
 
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
