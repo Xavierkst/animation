@@ -6,49 +6,39 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Window Properties
+/* Window Properties */
 int Window::width;
 int Window::height;
 const char* Window::windowTitle = "Viewport";
 
-// Objects to render
+/* Objects to render */
 Cube * Window::cube;
-//Skeleton* Window::skeleton;
 Skin* Window::skin;
 AnimationClip* Window::clip;
 AnimationPlayer* Window::player;
-Cloth* Window::cloth;
 const char* computeShaderPath;
-
 float time1, time2;
 
-// Gravitational force: 
-glm::vec3 gravForce; 
+/* Cloth variables */
+Cloth* Window::cloth;
 float clothMass;
-int grid_size;
 
+/* Floor Quad variables */
 FloorTile* Window::the_floor;
 int fSize; // floorSize
 
-// Camera Properties
+/* Camera Properties */
 Camera* Cam;
 
-// Interaction Variables
+/* Interaction Variables */
 bool LeftDown, RightDown;
 int MouseX, MouseY;
 
-// The shader program id
+/* Shader program id */
 GLuint Window::shaderProgram;
-GLuint Window::clothShaderProgram;
 Shader windowShaderProg;
-Shader clothShader;
 
-// ImGui Parameters 
-bool show_demo_window;
-bool show_another_window;
-ImVec4 clear_color;
-
-// Particle System 
+/* Particle System */
 ParticleSys* Window::particle_sys;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,13 +47,13 @@ ParticleSys* Window::particle_sys;
 bool Window::initializeProgram() {
 
 	// Create a shader program with a vertex shader and a fragment shader.
-	shaderProgram = windowShaderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
-	// Check the shader program.
-	if (!shaderProgram)
-	{
-		std::cerr << "Failed to initialize shader programs" << std::endl;
-		return false;
-	}
+	// shaderProgram = windowShaderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
+	// // Check the shader program.
+	// if (!shaderProgram)
+	// {
+	// 	std::cerr << "Failed to initialize shader programs" << std::endl;
+	// 	return false;
+	// }
 
 	return true;
 }
@@ -80,20 +70,11 @@ bool Window::initializeObjects()
 	time1 = clock();
 
 	// Cloth
-	clothMass = 0.8f;
-	grid_size = 30;
 	cloth = new Cloth();
 
 	// Floor tile
 	fSize = 30;
 	the_floor = new FloorTile(fSize);
-
-	// Gravity force:
-	gravForce = glm::vec3(0.0f, -9.8f, 0.0f);
-
-	show_demo_window = true;
-	show_another_window = false;
-	clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 	// Particle system
 	particle_sys = new ParticleSys(10000);
@@ -109,7 +90,7 @@ void Window::cleanUp()
 	delete cloth;
 	
 	// Delete the shader program.
-	glDeleteProgram(shaderProgram);
+	// glDeleteProgram(shaderProgram);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -209,8 +190,9 @@ void Window::idleCallback()
 	time1 = new_t;
 
 	// Update Cloth vertices each frame
-	int tot_steps = 60;
-	cloth->Update((dt/ (CLOCKS_PER_SEC * tot_steps)), gravForce, the_floor, tot_steps); 
+	// tot_steps = 60 by default
+	// (CLOCKS_PER_SEC * tot_steps)
+	cloth->Update(the_floor, dt);
 }
 
 void Window::displayCallback(GLFWwindow* window)
@@ -223,7 +205,7 @@ void Window::displayCallback(GLFWwindow* window)
 	// skin->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
 	// skin->getSkeleton()->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
 
-	// the_floor->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
+	the_floor->Draw(Cam->getCamPos(), Cam->GetViewProjectMtx());
 
 	cloth->Draw(Cam->getCamPos(),Cam->GetViewProjectMtx(), window);
 
@@ -341,4 +323,5 @@ void Window::imguiCleanUp() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
