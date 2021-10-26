@@ -3,21 +3,68 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "Cloth.h"
 
+// 6 sides, 36 vertices, position, normal and tex coord data 
+float cubeVertices[] = {
+	// positions          // normals           // texture coords
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+};
+
 // Constructor for simulation using CPU computed vertex attributes 
-Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::vec3(1.0f))
+Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), transfMat(glm::mat4(1.0f)), color(glm::vec3(1.0f))
 {
 	// Load vert and frag shaders only (constructor below also loads compute shader)
 	renderProg.LoadShaders("src/shaders/clothShader.vert", "src/shaders/clothShader.frag");	
+	lightRenderProg.LoadShaders("src/shaders/clothShader.vert", "src/shaders/lightSource.frag");
 
-	glm::vec2 clothSize(4.0f, 4.0f);
-	nParticles = glm::ivec2(30, 30);
+	glm::vec2 clothSize(6.0f, 8.0f);
+	nParticles = glm::ivec2(30, 40);
 	vAir = glm::vec3(0.001f, .001f, 0.001f); // air velocity
 
 	// 1. viable values: Ks = 100.0f, Kd = 50.0f, mass = 1.1f, Cd = 1.020f
 	// 2. Another viable set of values (?) Ks = 50.0f, Kd = 30.0f, mass = 1.1f, Cd = 1.020f
 	// Constants: 
-	springConst = 1200.0f; 
-	dampConst = 30.0f; 
+	springConst = 300.0f; 
+	dampConst = 45.0f; 
 	Cd = 1.020f;
 	rho = 1.225;
 	rest_const = 0.05f;
@@ -25,10 +72,10 @@ Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::
 	float pMass = 0.8f;
 	gotWind = true;
 
-	float dx = clothSize.x / (nParticles.x - 1);
-	float dy = clothSize.y / (nParticles.y - 1);
-	float ds = 1.0f / (nParticles.x - 1);
-	float dt = 1.0f / (nParticles.y - 1);
+	float dx = clothSize.x / (float)(nParticles.x - 1.0f);
+	float dy = clothSize.y / (float)(nParticles.y - 1.0f);
+	float ds = 1.0f / (float)(nParticles.x - 1);
+	float dt = 1.0f / (float)(nParticles.y - 1);
 
 	// Given a gridSize, we want to set the positions of the particles here 
 	for (int i = nParticles.y - 1; i >= 0; i--) {
@@ -37,9 +84,9 @@ Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::
 			// randomized z-component starter values
 			// float randVal = (rand() % 100 + 1) / 1000.0f; 
 			particles.push_back(new Particle(glm::vec3(.0f), glm::vec3(.0f), 
-				glm::vec3((j - (nParticles.x -1) / 2.0f) * dx, i * dy * 2.0f, 0.0f), glm::vec3(.0f,.0f, 1.0f) ,pMass));
+				glm::vec3((j - (nParticles.x -1) / 2.0f) * dx, i * dy, 0.0f), glm::vec3(.0f,.0f, 1.0f) ,pMass));
 			// Push in texCoords
-			texCoords.push_back(glm::ivec2(ds * j, dt * i));
+			texCoords.push_back(glm::vec2((float)ds * j, (float)dt * i));
 		}
 	}
 
@@ -152,7 +199,7 @@ Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::
 	glGenVertexArrays(1, &clothVAO);
 	glGenBuffers(1, &VBO_pos);
 	glGenBuffers(1, &VBO_normals);
-	glGenTextures(1, &clothTextureID);
+	glGenTextures(1, &clothTexture[0]);
 
 	// Bind the VAO.
 	glBindVertexArray(clothVAO);
@@ -170,17 +217,53 @@ Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), color(glm::
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
 	// Bind the texture coord buffer object
-	clothTextureID = loadTexture("src/textures/redFabric.jpg");
+	// clothTexture[0] = loadTexture("src/textures/blueDenim/Blue_Denim_Texture_DIFFUSE.png");
+	clothTexture[0] = loadTexture("src/textures/blueDenim/Blue_Denim_Texture_DIFFUSE.png");
+	clothTexture[1] = loadTexture("src/textures/blueDenim/Blue_Denim_Texture_SPECULAR.png");
 	renderProg.use();
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, clothTextureID);
+	renderProg.setInt("material.texture_diffuse1", 0);
+	renderProg.setInt("material.texture_specular1", 1);
+	renderProg.setFloat("material.shininess", 64);
 
+	// pt light
+	// set 2 pt light uniform values
+	for (int i = 0; i < 2; ++i) {
+		std::string num = std::to_string(i+1);
+		renderProg.setFloat("pt_light" + num + ".k_constant", 1.0f);
+		renderProg.setFloat("pt_light" + num + ".k_linear", 0.09f);
+		renderProg.setFloat("pt_light" + num + ".k_quad", 0.032f);
+		renderProg.setVec3("pt_light" + num + ".ambient", glm::vec3(0.2f, .2f, 0.2f));
+		renderProg.setVec3("pt_light" + num + ".diffuse", glm::vec3(0.8f, .8f, 0.8f));
+		renderProg.setVec3("pt_light" + num + ".specular", glm::vec3(1.0f));
+	}
+	// dir light
+	renderProg.setVec3("dir_light.direction", glm::vec3(-2.0f, -8.0f, -4.0));
+	renderProg.setVec3("dir_light.ambient", glm::vec3(0.2f, .2f, 0.2f));
+	renderProg.setVec3("dir_light.diffuse", glm::vec3(0.5f, .5f, 0.5f));
+	renderProg.setVec3("dir_light.specular", glm::vec3(1.0f));
 	// Generate EBO, bind the EBO to the bound VAO and send the data
 	glGenBuffers(1, &clothEBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, clothEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * triIndices.size(), triIndices.data(), GL_STATIC_DRAW);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	// Generate cube light source buffers
+	glGenBuffers(1, &lightSourcePos);
+	glGenVertexArrays(1, &lightSourceVAO);
+	glBindVertexArray(lightSourceVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, lightSourcePos);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices[0], GL_STATIC_DRAW);
+	// Positions
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)0);
+	// Normals
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(3 * sizeof(float)));
+	// Tex coords
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(6 * sizeof(float)));
+	
 
 	// Unbind the VBOs.
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -247,14 +330,13 @@ Cloth::Cloth(float dur, const char* computeShaderPath) {
 
 	// activate the shader program 
 	renderProg.use();
-	// pt light uniform values
-	renderProg.setFloat("pt_light.k_constant", 1.0f);
-	renderProg.setFloat("pt_light.k_linear", 1.0f);
-	renderProg.setFloat("pt_light.k_quad", 1.0f);
-	renderProg.setVec4("pt_light.position", glm::vec4(0.0f, 5.0f, -0.5f, 1.0f));
-	renderProg.setVec3("pt_light.ambient", glm::vec3(0.2f, .2f, 0.2f));
-	renderProg.setVec3("pt_light.diffuse", glm::vec3(0.8f, .8f, 0.8f));
-	renderProg.setVec3("pt_light.specular", glm::vec3(1.0f));
+	// set 2 pt light uniform values
+	for (int i = 0; i < 2; ++i) {
+		std::string num = std::to_string(i+1);
+		renderProg.setFloat("pt_light" + num + ".k_constant", 1.0f);
+		renderProg.setFloat("pt_light" + num + ".k_linear", 1.0f);
+		renderProg.setFloat("pt_light" + num + ".k_quad", 1.0f);
+	}
 	// dir light
 	renderProg.setVec3("dir_light.ambient", glm::vec3(0.2f, .2f, 0.2f));
 	renderProg.setVec3("dir_light.diffuse", glm::vec3(1.0f));
@@ -344,46 +426,74 @@ void Cloth::initializeBuffers() {
 // Render the cloth each frame 
 void Cloth::Draw(const glm::vec3& camPos, const glm::mat4& viewProjMtx, GLFWwindow* window)
 {
+	float t_time = glfwGetTime();
+	float t1 = fabsf(sin( t_time*2.0f));
+	float t2 = fabsf(cos(t_time *2.0f));
+	float t3 = fabsf(sin(t_time * 2.0f));
 	// activate the shader program 
 	renderProg.use();
 	// Set the active texture unit 
-	// (even tho by default tex-unit 0 is alr activated)
-	// Material
 	renderProg.setInt("material.texture_diffuse1", 0);
 	renderProg.setInt("material.texture_specular1", 1);
 	// renderProg.setFloat("material.texture_diffuse1", 1);
-	renderProg.setFloat("material.shininess", 5);
+	renderProg.setFloat("material.shininess", 64);
 	// renderProg.setFloat("material.texture_diffse1", 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, this->clothTextureID);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, this->clothTextureID);
-
 	// pt light uniform values
-	renderProg.setFloat("pt_light.k_constant", 1.0f);
-	renderProg.setFloat("pt_light.k_linear", 1.0f);
-	renderProg.setFloat("pt_light.k_quad", 1.0f);
-	renderProg.setVec4("pt_light.position", glm::vec4(0.0f, 5.0f, -0.5f, 1.0f));
-	renderProg.setVec3("pt_light.ambient", glm::vec3(0.2f, .2f, 0.2f));
-	renderProg.setVec3("pt_light.diffuse", glm::vec3(0.8f, .8f, 0.8f));
-	renderProg.setVec3("pt_light.specular", glm::vec3(1.0f));
-	// dir light
-	renderProg.setVec3("dir_light.direction", glm::vec3(-2.0f, -8.0f, -4.0));
-	renderProg.setVec3("dir_light.ambient", glm::vec3(0.2f, .2f, 0.2f));
-	renderProg.setVec3("dir_light.diffuse", glm::vec3(0.8f, .8f, 0.8f));
-	renderProg.setVec3("dir_light.specular", glm::vec3(1.0f));
-	// renderProg.setVec3("material.diffuse", glm::vec3(1.0f));
-	// renderProg.setVec3("material.specular", glm::vec3(1.0f));
-
+	glm::mat4 lightModel1(1.0f);
+	glm::vec4 lightPos1(glm::vec3(0.0f), 1.0f);
+	glm::vec4 lightPos2(glm::vec3(0.0f), 1.0f);
+	float dist = 5.0f;
+	float rotSpeed = t_time * 50.0f;
+	lightModel1 = glm::rotate(lightModel1, glm::radians(-rotSpeed), glm::vec3(.0f, 1.0f, .0f));
+	lightModel1 = glm::translate(lightModel1, glm::vec3(dist));
+	lightPos1 = lightModel1 * lightPos1;
+	glm::vec4 light_col(t1, t2, t3, 1.0f);
+	glm::vec3 LightCol(t1, t2, t3);
+	renderProg.setVec3("LightColor", LightCol);
+	renderProg.setVec4("pt_light1.position", lightPos1);
+	renderProg.setVec3("pt_light1.ambient", 0.2f * glm::vec3(t1, t2, t3));
+	renderProg.setVec3("pt_light1.diffuse", 0.5f * glm::vec3(t1, t2, t3));
+	renderProg.setVec3("pt_light1.specular", glm::vec3(t1, t2, t3));
+	glm::vec3 white_light(1.0f);
+	lightModel1 = glm::mat4(1.0f);
+	lightModel1 = glm::rotate(lightModel1, glm::radians(rotSpeed), glm::vec3(.0f, 1.0f, 0.0f));
+	lightModel1 = glm::translate(lightModel1, glm::vec3(-dist, 2.0f, -dist));
+	lightPos2 = lightModel1 * lightPos2;
+	renderProg.setVec4("pt_light2.position", lightPos2);
+	renderProg.setVec3("pt_light2.ambient", 0.2f * white_light);
+	renderProg.setVec3("pt_light2.diffuse", 0.5f * white_light);
+	renderProg.setVec3("pt_light2.specular", white_light);
 	// get the locations and send the uniforms to the shader 
 	renderProg.setMat4("model", this->model);
 	renderProg.setMat4("viewProj", viewProjMtx);
 	renderProg.setVec3("view_position", camPos);
 
-	// Bind the VAO
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, clothTexture[0]);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, clothTexture[1]);
+	// Bind the clothVAO
 	glBindVertexArray(clothVAO);
 	glDrawElements(GL_TRIANGLES, triIndices.size(), GL_UNSIGNED_INT, 0);
 	// glDrawElements(GL_TRIANGLES, idxBuf.size(), GL_UNSIGNED_INT, 0);
+
+	// Bind and draw light cubes
+	lightRenderProg.use();
+	glBindVertexArray(lightSourceVAO);
+	lightModel1 = glm::mat4(1.0f);
+	lightModel1 = glm::rotate(lightModel1, glm::radians(-rotSpeed), glm::vec3(.0f, 1.0f, 0.0f));
+	lightModel1 = glm::translate(lightModel1, glm::vec3(dist));
+	lightRenderProg.setMat4("model", lightModel1);
+	lightRenderProg.setMat4("viewProj", viewProjMtx);
+	lightRenderProg.setVec3("view_position", camPos);
+	lightRenderProg.setVec3("lightColor", glm::vec3(t1, t2, t3));
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	lightModel1 = glm::mat4(1.0f);
+	lightModel1 = glm::rotate(lightModel1, glm::radians(rotSpeed), glm::vec3(0.0f, 1.0f, 0.0f));
+	lightModel1 = glm::translate(lightModel1, glm::vec3(-dist, 2.0f, -dist));
+	lightRenderProg.setMat4("model", lightModel1);
+	lightRenderProg.setVec3("lightColor", white_light);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// Unbind the VAO and shader program
 	glBindVertexArray(0);
@@ -402,7 +512,7 @@ void Cloth::renderImGui(GLFWwindow* window)
 
 	{
 		ImGui::Begin("Cloth Simulation Options");
-		ImGui::SliderFloat("Air Velo X", &getWindVelo().x, -3.0f, 3.0f);
+		ImGui::SliderFloat("Air Velo X", &getWindVelo().x, -15.0f, 15.0f);
 		ImGui::SliderFloat("Air Velo Y", &getWindVelo().y, -15.0f, 15.0f);
 		ImGui::SliderFloat("Air Velo Z", &getWindVelo().z, -15.0f, 15.0f);
 
@@ -467,59 +577,54 @@ void Cloth::Update(FloorTile* floor, float delta_t, glm::vec3 g, int steps)
 			particles[i]->setNorm(glm::normalize(particles[i]->getNorm()));
 			particleNorm[i] = particles[i]->getNorm();
 			// integ. motion
-			particlePos[i] = particles[i]->integrateMotion(dt);
+			// particlePos[i] = particles[i]->integrateMotion(dt);
+			particles[i]->integrateMotion(dt);
+			particlePos[i] = particles[i]->getPos();
 
 			// After integrating motion, check if collided with objects 
-				// in this case, FloorTile
-				if (particlePos[i].y < floor->getYPos()) {
-					// shift the y pos of the cloth vertex up to
-					// the surface
+			// in this case, FloorTile
+			if (particles[i]->getPos().y < floor->getYPos()) {
+				// shift the y pos of the cloth vertex up to
+				// the surface
 
-					// calculate impulse, as well as the tangential impulse,
-					// and add to particle's velocity
-					// calc closing velo: 
-					float v_close = glm::dot(
-						(particles[i]->getVelo() - floor->getVelo()), 
-						floor->getNormal()
-					);
-					// calculate impulse: 
-					glm::vec3 impulse(
-						-1.0f * (1 + rest_const) * particles[i]->getMass() * 
-						v_close * floor->getNormal());
+				// calculate impulse, as well as the tangential impulse,
+				// and add to particle's velocity
+				// calc closing velo: 
+				float v_close = glm::dot((particles[i]->getVelo() - floor->getVelo()), floor->getNormal());
+				// calculate impulse: 
+				glm::vec3 impulse(-1.0f * (1 + rest_const) * particles[i]->getMass() * 
+					v_close * floor->getNormal());
 
-					// compute frictional impulse -- parallel to plane
-					// find tangential velo and flip value: 
-					glm::vec3 v_norm(glm::dot(particles[i]->getVelo(), 
-						floor->getNormal()) * floor->getNormal());
-					glm::vec3 tan_impulse_dir(-1.0f * 
-						glm::normalize(particles[i]->getVelo() - v_norm));
-					glm::vec3 frictional_impulse(dynamic_fric * 
-						glm::length(impulse) * tan_impulse_dir);
+				// compute frictional impulse -- parallel to plane
+				// find tangential velo and flip value: 
+				glm::vec3 v_norm(glm::dot(particles[i]->getVelo(), floor->getNormal()) * floor->getNormal());
+				glm::vec3 tan_impulse_dir(-1.0f * 
+				glm::normalize(particles[i]->getVelo() - v_norm));
+				glm::vec3 frictional_impulse(dynamic_fric * glm::length(impulse) * tan_impulse_dir);
 
-					// add these to the particle's velo: 
-					particles[i]->setVelo(
-						particles[i]->getVelo() + 
-						((impulse + frictional_impulse) / particles[i]->getMass()));
+				// add these to the particle's velo: 
+				particles[i]->setVelo(particles[i]->getVelo() + 0.2f * ((impulse + frictional_impulse) / particles[i]->getMass()));
 
-					particles[i]->setPos(glm::vec3(particles[i]->getPos().x, 
-						particles[i]->getPos().y + 
-						(floor->getYPos() - 1.0f * particlePos[i].y) + 0.001f, 
-						particles[i]->getPos().z));
+				particles[i]->setPos(glm::vec3(particles[i]->getPos().x, 
+					particles[i]->getPos().y + (floor->getYPos() - particlePos[i].y) + 0.005f, 
+					particles[i]->getPos().z));
 
-					particlePos[i].y = particlePos[i].y + 
-						(floor->getYPos() - 1.0f * particlePos[i].y) + 0.001f;
-				}
+				// particlePos[i].y = particlePos[i].y + 
+				// 	(floor->getYPos() - 1.0f * particlePos[i].y) + 0.005f;
+				particlePos[i] = particles[i]->getPos();
+				// particlePos[i] = particles[i]->getPos();
+			}
 		}
 	}
 
-		glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * particlePos.size(), particlePos.data(), GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * particlePos.size(), particlePos.data(), GL_DYNAMIC_DRAW);
 
-		glBindBuffer(GL_ARRAY_BUFFER, VBO_normals);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * particleNorm.size(), particleNorm.data(), GL_DYNAMIC_DRAW);
-		
-		// Unbind the VBOs
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_normals);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * particleNorm.size(), particleNorm.data(), GL_DYNAMIC_DRAW);
+	
+	// Unbind the VBOs
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 // An experimental update() function that uses clothCompute.cs (the cloth compute shader)
@@ -553,8 +658,9 @@ void Cloth::Update2() {
 void Cloth::togglePos(glm::vec3 moveAmt)
 {
 	glm::mat4 moveMat = glm::translate(glm::mat4(1.0f), moveAmt);
-	model *= moveMat;
+	transfMat = moveMat * transfMat;
 	for (int i = 0; i < nParticles.x; i++) {
+		// glm::vec3 newPos = moveMat * glm::vec4(particles[i]->getPos(), 1.0f);
 		glm::vec3 newPos = moveMat * glm::vec4(particles[i]->getPos(), 1.0f);
 		particles[i]->setPos(newPos);
 	}
@@ -582,16 +688,12 @@ void Cloth::spin(float deg)
 	//model = model * glm::rotate(glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f));
 	for (int i = 0; i < nParticles.x; i++) {
 		glm::mat4 rot(glm::rotate(glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f)));
-		glm::mat4 newTransl(glm::inverse(model));
-		glm::vec3 nPos = model * rot * newTransl * glm::vec4(particles[i]->getPos(), 1.0f);
+		// glm::mat4 newTransl(glm::inverse(model));
+		glm::mat4 invTransf(glm::inverse(transfMat));
+		glm::vec3 nPos = transfMat * rot * invTransf * glm::vec4(particles[i]->getPos(), 1.0f);
 		particles[i]->setPos(nPos);
-		particlePos[i] = nPos;
+		// particlePos[i] = nPos;
 	}
-}
-
-void Cloth::setClothTextureID(GLuint texID)
-{
-	clothTextureID = texID;
 }
 
 unsigned int Cloth::loadTexture(char const* path) {
@@ -606,6 +708,7 @@ unsigned int Cloth::loadTexture(char const* path) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+	// stbi_set_flip_vertically_on_load(true);
 	image_data = stbi_load(path, &imgWidth, &imgHt, &num_color_channels, 0);
 	if (image_data) {
 		GLenum format;
@@ -618,6 +721,7 @@ unsigned int Cloth::loadTexture(char const* path) {
 
 		glTexImage2D(GL_TEXTURE_2D, 0, format, imgWidth, imgHt, 0, format, GL_UNSIGNED_BYTE, image_data);
 		glGenerateMipmap(GL_TEXTURE_2D);
+		std::cout << "Successfully loaded texture" << std::endl;
 	}
 	else {
 		std::cout << "Failed to load texture" << std::endl;

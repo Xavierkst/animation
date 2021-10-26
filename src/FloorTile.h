@@ -2,9 +2,11 @@
 #define _FLOOR_TILE_H_
 
 #include "core.h"
+#include "shader.h"
 
 class FloorTile {
 private:
+	Shader renderProg;
 	std::vector<glm::vec3> pos;
 	std::vector<glm::vec3> normals;
 	std::vector<int> triIndices;
@@ -21,10 +23,11 @@ private:
 
 public:
 	FloorTile(int floor_size);
+	~FloorTile();
 
 	float getYPos(); 
 
-	void Draw(const glm::mat4& viewProjMtx, GLuint shader);
+	void Draw(const glm::vec3& camPos, const glm::mat4& viewProjMtx);
 
 	glm::vec3 getVelo();
 

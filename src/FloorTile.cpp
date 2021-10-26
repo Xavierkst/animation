@@ -2,6 +2,7 @@
 
 FloorTile::FloorTile(int floor_size)
 {	
+	renderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
 	floorSize = floor_size;
 	color = glm::vec3(0.5f, 0.5f, 0.5f);
 	model = glm::mat4(1.0f);
@@ -11,9 +12,8 @@ FloorTile::FloorTile(int floor_size)
 		for (int j = 0; j < floorSize; j++) {
 			// force, velo, pos, normal, mass
 			// force and velo default to 0
-			
-			pos.push_back(glm::vec3((float(j) - ((float(floorSize) - 1.0f) / 2.0f)), 
-				 -4.5f, (float(i) - ((float(floorSize) - 1.0f) / 2.0f))));
+			glm::vec3 p((float(j) - ((float(floorSize) - 1.0f) / 2.0f)), -3.5f, (float(i) - ((float(floorSize) - 1.0f) / 2.0f)));
+			pos.push_back(p);
 			normals.push_back(glm::vec3(.0f, 1.0f, .0f));
 		}
 	}
@@ -59,29 +59,33 @@ FloorTile::FloorTile(int floor_size)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * triIndices.size(), triIndices.data(), GL_STATIC_DRAW);
 
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
 	// Unbind the VBOs.
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
 
-
+FloorTile::~FloorTile()
+{
+	glDeleteProgram(renderProg.ID);
+}
 
 float FloorTile::getYPos()
 {
 	return pos[0].y;
 }
 
-void FloorTile::Draw(const glm::mat4& viewProjMtx, GLuint shader)
+void FloorTile::Draw(const glm::vec3& camPos, const glm::mat4& viewProjMtx)
 {
 	// actiavte the shader program 
-	glUseProgram(shader);
+	renderProg.use();
 
 	// get the locations and send the uniforms to the shader 
-	glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, (float*)&viewProjMtx);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, (float*)&model);
-	glUniform3fv(glGetUniformLocation(shader, "DiffuseColor"), 1, &color[0]);
+	renderProg.setMat4("model", this->model);
+	renderProg.setMat4("viewProj", viewProjMtx);
+	renderProg.setVec3("DiffuseColor", color);
+	// glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, (float*)&viewProjMtx);
+	// glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, (float*)&model);
+	// glUniform3fv(glGetUniformLocation(shader, "DiffuseColor"), 1, &color[0]);
 
 	// Bind the VAO
 	glBindVertexArray(VAO);

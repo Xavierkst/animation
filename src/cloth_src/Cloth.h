@@ -19,7 +19,11 @@ private:
 	GLuint clothVAO; 
 	GLuint VBO_pos, VBO_normals;
 	GLuint clothEBO;
-	GLuint clothTextureID;
+	GLuint clothTexture[5];
+
+	Shader lightRenderProg;
+	GLuint lightSourcePos;
+	GLuint lightSourceVAO;
 
 	GLuint normBuf;
 	GLuint computeShaderID;
@@ -27,6 +31,7 @@ private:
 	int readBuf;
 
 	glm::mat4 model; // cloth model transform 
+	glm::mat4 transfMat; // keeps track of all transforms on the cloth so far
 	glm::vec3 color; // cloth color
 
 	/* Physical constants */
@@ -88,8 +93,6 @@ public:
 	glm::vec3& getWindVelo();
 
 	void spin(float deg);
-
-	void setClothTextureID(GLuint texID);
 
 	unsigned int loadTexture(char const* path);
 
