@@ -22,7 +22,8 @@ private:
 	GLuint EBO;
 
 public:
-	FloorTile(int floor_size);
+	FloorTile(int floor_size = 30);
+
 	~FloorTile();
 
 	float getYPos(); 

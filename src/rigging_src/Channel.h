@@ -11,8 +11,6 @@ private:
 	int number; 
 
 public:
-	//Channel();
-	//~Channel();
 	void setNumber(int num);
 	std::vector<Keyframe>& getKeyframes();
 

@@ -50,7 +50,7 @@ float cubeVertices[] = {
 };
 
 // Constructor for simulation using CPU computed vertex attributes 
-Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), transfMat(glm::mat4(1.0f)) 
+Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const char* specularTexPath): model(glm::mat4(1.0f)), transfMat(glm::mat4(1.0f)) 
 {
 	glm::vec2 clothSize(6.0f, 8.0f);
 	nParticles = glm::ivec2(40, 40);
@@ -217,8 +217,8 @@ Cloth::Cloth(const char* computeShaderPath): model(glm::mat4(1.0f)), transfMat(g
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * triIndices.size(), triIndices.data(), GL_STATIC_DRAW);
 
 	// Bind the texture coord buffer object
-	clothTexture[0] = loadTexture("src/textures/blueDenim/Blue_Denim_Texture_DIFFUSE.png");
-	clothTexture[1] = loadTexture("src/textures/blueDenim/Blue_Denim_Texture_SPECULAR.png");
+	clothTexture[0] = loadTexture(diffuseTexPath);
+	clothTexture[1] = loadTexture(specularTexPath);
 	// clothTexture[0] = loadTexture("src/textures/bladeRunner.jpg");
 	// clothTexture[0] = loadTexture("src/textures/awesomeface.png");
 	// clothTexture[0] = loadTexture("src/textures/leatherDiamond/Leather_Diamond_Patches_002_basecolor.jpg");

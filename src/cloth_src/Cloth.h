@@ -12,6 +12,8 @@
 
 #include "../../stb_image/stb_image.h"
 
+// We use a vector of structs to encapsulate the cloth vertex
+// data since struct data layout is contiguous
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec3 normal;
@@ -63,7 +65,9 @@ private:
 
 public:
 
-	Cloth(const char* computeShaderPath = "src/shaders/clothCompute.comp");
+	Cloth(const char* computeShaderPath = "src/shaders/clothCompute.comp", 
+		const char* diffuseTexPath = "src/textures/blueDenim/Blue_Denim_Texture_DIFFUSE.png", 
+		const char* specularTexPath = "src/textures/blueDenim/Blue_Denim_Texture_SPECULAR.png");
 
 	~Cloth();
 

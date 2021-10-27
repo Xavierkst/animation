@@ -64,8 +64,7 @@ bool Window::initializeObjects()
 	cloth = new Cloth();
 
 	// Floor tile
-	fSize = 30;
-	the_floor = new FloorTile(fSize);
+	the_floor = new FloorTile();
 
 	// Particle system
 	particle_sys = new ParticleSys(10000);
