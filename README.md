@@ -1,7 +1,7 @@
-## C++ & OpenGL
+## Animation with C++ & OpenGL
 
-**To-do**: 
-Compute shader vertex processing code for cloth has been written (clothShader.comp), but needs OpenGL 4.2 or greater to
+**Note:**: 
+Compute shader for cloth has been written (clothShader.comp), but needs OpenGL 4.2 or greater to
 support compute shaders..
 
 ### Cloth Simulation
