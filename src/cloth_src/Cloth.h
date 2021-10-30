@@ -6,19 +6,11 @@
 #include "stdlib.h"
 #include "../FloorTile.h"
 #include "../shader.h"
-
 #include <fstream>
 #include <sstream>
+#include "../Mesh.h"
 
 #include "../../stb_image/stb_image.h"
-
-// We use a vector of structs to encapsulate the cloth vertex
-// data since struct data layout is contiguous
-struct Vertex {
-	glm::vec3 pos;
-	glm::vec3 normal;
-	glm::vec2 texture_coord;
-};
 
 class Cloth {
 private:

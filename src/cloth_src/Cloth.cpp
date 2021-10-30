@@ -59,8 +59,8 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 	// Constants: 
 	// 1. viable values: Ks = 100.0f, Kd = 50.0f, mass = 1.1f, Cd = 1.020f
 	// 2. Another viable set of values (?) Ks = 50.0f, Kd = 30.0f, mass = 1.1f, Cd = 1.020f
-	springConst = 300.0f; 
-	dampConst = 45.0f; 
+	springConst = 200.0f; 
+	dampConst = 15.0f; 
 	Cd = 1.020f;
 	rho = 1.225;
 	rest_const = 0.05f;
@@ -86,7 +86,7 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 			Vertex v;
 			v.pos = position;
 			v.normal = norm;
-			v.texture_coord = glm::vec2(ds * (float)j, dt * (float)i);
+			v.texCoord = glm::vec2(ds * (float)j, dt * (float)i);
 			vertices.push_back(v);
 		}
 	}
