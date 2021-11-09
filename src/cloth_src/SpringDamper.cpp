@@ -20,8 +20,6 @@ SpringDamper::SpringDamper(float kSpring, float kDamp, float natLength, Particle
 
 SpringDamper::~SpringDamper()
 {
-	// delete p1;
-	// delete p2;
 }
 
 void SpringDamper::computeForce()

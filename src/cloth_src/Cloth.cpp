@@ -1,6 +1,7 @@
 // we activate some section of the stb_image.h functions -- 
 // essentially turning it into a .cpp file 
 #define STB_IMAGE_IMPLEMENTATION
+#include "../../stb_image/stb_image.h"
 #include "Cloth.h"
 
 // 6 sides, 36 vertices, position, normal and tex coord data 

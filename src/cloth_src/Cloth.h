@@ -10,7 +10,6 @@
 #include <sstream>
 #include "../Mesh.h"
 
-#include "../../stb_image/stb_image.h"
 
 class Cloth {
 private:
@@ -31,6 +30,7 @@ private:
 	float rho, Cd, rest_const, dynamic_fric; 
 	
 	// Cloth has an array of Particles, Triangles, and springs
+
 	std::vector<Particle*> particles;
 	std::vector<SpringDamper*> springs;
 	std::vector<Triangle> triangles; // triangle vector	
