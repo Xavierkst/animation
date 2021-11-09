@@ -16,7 +16,6 @@ AnimationPlayer::AnimationPlayer(AnimationClip* c, Skeleton* skeleton)
 
 AnimationPlayer::~AnimationPlayer()
 {
-	delete clip;
 }
 
 void AnimationPlayer::SetClip(AnimationClip* c)
