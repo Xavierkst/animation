@@ -31,7 +31,8 @@ private:
 	
 	// Cloth has an array of Particles, Triangles, and springs
 
-	std::vector<Particle*> particles;
+	// std::vector<Particle*> particles;
+	std::vector<std::shared_ptr<Particle>> particles;
 	std::vector<SpringDamper*> springs;
 	std::vector<Triangle> triangles; // triangle vector	
 	std::vector<int> triIndices; // Indices for the EBO 

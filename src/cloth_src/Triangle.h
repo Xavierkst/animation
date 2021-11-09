@@ -8,9 +8,12 @@ class Triangle {
 private:
 	std::vector<int> triVerts;
 
-	Particle* p1;
-	Particle* p2;
-	Particle* p3;
+	// Particle* p1;
+	// Particle* p2;
+	// Particle* p3;
+	std::shared_ptr<Particle> p1;
+	std::shared_ptr<Particle> p2;
+	std::shared_ptr<Particle> p3;
 	glm::vec3 normal;
 	glm::vec3 vSurface;
 
@@ -18,8 +21,10 @@ public:
 	// Triangle constructor 
 	Triangle();
 	
-	//Triangle(int v1, int v2, int v3);
-	Triangle(Particle* part1, Particle* part2, Particle* part3);
+	// Triangle(Particle* part1, Particle* part2, Particle* part3);
+	Triangle(std::shared_ptr<Particle> part1, 
+		std::shared_ptr<Particle> part2, 
+		std::shared_ptr<Particle> part3);
 
 	// Calculates aerodynamic force on the triangle
 	glm::vec3 calcAeroForce(glm::vec3 airVelo, float rho, float Cd);
@@ -36,9 +41,9 @@ public:
 	glm::vec3 getNormal();
 
 	// get pointer to each particle p1 p2 p3
-	Particle* getP1();
-	Particle* getP2();
-	Particle* getP3();
+	Particle* getP1() const;
+	Particle* getP2() const;
+	Particle* getP3() const;
 
 	std::vector<int>& getTriVerts();
 

@@ -81,7 +81,7 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 			float randVal = (rand() % 100 + 1) / 1000.0f; 
 			glm::vec3 position = glm::vec3((j - (nParticles.x - 1) / 2.0f) * dx, i * dy, randVal);
 			glm::vec3 norm = glm::vec3(.0f, .0f, 1.0f);
-			particles.push_back(new Particle(glm::vec3(.0f), 
+			particles.push_back(std::make_shared<Particle>(glm::vec3(.0f), 
 				glm::vec3(.0f), position, norm, pMass));
 
 			Vertex v;
@@ -124,10 +124,11 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 	// link horizontal springs
 	for (int i = 0; i < nParticles.x; i++) {
 		for (int j = 0; j < nParticles.x - 1; j++) {
-			Particle* point1 = particles[(i * nParticles.x) + j];
-			Particle* point2 = particles[(i * nParticles.x) + j + 1];
+			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]);
+			std::shared_ptr<Particle> point2(particles[(i * nParticles.x) + j + 1]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			// Ks, Kd, spr_nat_length, * p1, * p2
+			// springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
 		}
@@ -136,8 +137,8 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 	// link vertical springs
 	for (int i = 0; i < nParticles.x - 1; i++) {
 		for (int j = 0; j < nParticles.x; j++) {
-			Particle* point1 = particles[(i * nParticles.x) + j]; 
-			Particle* point2 = particles[((i + 1) * nParticles.x) + j];
+			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]);
+			std::shared_ptr<Particle> point2(particles[((i + 1) * nParticles.x) + j]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
@@ -147,8 +148,8 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 	// link diagonal from top left to btm right
 	for (int i = 0; i < nParticles.x - 1; i++) {
 		for (int j = 0; j < nParticles.x - 1; j++) {
-			Particle* point1 = particles[(i * nParticles.x) + j]; 
-			Particle* point2 = particles[((i + 1) * nParticles.x) + j + 1];
+			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]);
+			std::shared_ptr<Particle> point2(particles[((i + 1) * nParticles.x) + j + 1]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
@@ -158,8 +159,8 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 	// link diagonal from btm left to top right
 	for (int i = 0; i < nParticles.x - 1; i++) {
 		for (int j = 1; j < nParticles.x; j++) {
-			Particle* point1 = particles[(i * nParticles.x) + j]; 
-			Particle* point2 = particles[((i + 1) * nParticles.x) + j - 1];
+			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]); 
+			std::shared_ptr<Particle> point2(particles[((i + 1) * nParticles.x) + j - 1]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
@@ -169,8 +170,8 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 	// link curr to 2 particles to its right
 	for (int i = 0; i < nParticles.x; i++) {
 		for (int j = 0; j < nParticles.x - 2; j++) {
-			Particle* point1 = particles[(i * nParticles.x) + j]; 
-			Particle* point2 = particles[(i * nParticles.x) + j + 2];
+			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]); 
+			std::shared_ptr<Particle> point2(particles[(i * nParticles.x) + j + 2]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 		}
@@ -179,8 +180,8 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 	// link curr to 2 particles to its bottom
 	for (int i = 0; i < nParticles.x - 2; i++) {
 		for (int j = 0; j < nParticles.x; j++) {
-			Particle* point1 = particles[(i * nParticles.x) + j]; 
-			Particle* point2 = particles[((i+2) * nParticles.x) + j];
+			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]); 
+			std::shared_ptr<Particle> point2(particles[((i+2) * nParticles.x) + j]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
 		}
@@ -276,11 +277,9 @@ Cloth::~Cloth()
 	for (int k = 0; k < springs.size(); k++) {
 		delete springs[k];
 	}
-	for (int i = 0; i < particles.size(); ++i) {
-		delete particles[i];
-	}
-
-	// delete[] vertices;
+	// for (int i = 0; i < particles.size(); ++i) {
+	// 	delete particles[i];
+	// }
 
 	// glDeleteProgram(renderProg.ID);
 }

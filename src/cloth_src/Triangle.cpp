@@ -1,6 +1,7 @@
 #include "Triangle.h"
 
-Triangle::Triangle(Particle* part1, Particle* part2, Particle* part3)
+// Triangle::Triangle(Particle* part1, Particle* part2, Particle* part3)
+Triangle::Triangle(std::shared_ptr<Particle> part1, std::shared_ptr<Particle> part2, std::shared_ptr<Particle> part3) 
 {
     p1 = part1; 
     p2 = part2;
@@ -53,19 +54,19 @@ glm::vec3 Triangle::getNormal()
     return normal;
 }
 
-Particle* Triangle::getP1()
+Particle* Triangle::getP1() const
 {
-    return p1;
+    return p1.get();
 }
 
-Particle* Triangle::getP2()
+Particle* Triangle::getP2() const
 {
-    return p2;
+    return p2.get();
 }
 
-Particle* Triangle::getP3()
+Particle* Triangle::getP3() const
 {
-    return p3;
+    return p3.get();
 }
 
 std::vector<int>& Triangle::getTriVerts()

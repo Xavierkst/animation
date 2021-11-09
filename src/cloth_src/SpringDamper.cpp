@@ -9,13 +9,17 @@ SpringDamper::SpringDamper()
 	p2 = nullptr;
 }
 
-SpringDamper::SpringDamper(float kSpring, float kDamp, float natLength, Particle* part1, Particle* part2)
+// SpringDamper::SpringDamper(float kSpring, float kDamp, float natLength, Particle* part1, Particle* part2)
+
+SpringDamper::SpringDamper(float kSpring, float kDamp, float natLength, 
+	std::shared_ptr<Particle> part1, 
+	std::shared_ptr<Particle> part2)
 {
+	p1 = part1;
+	p2 = part2;
 	Ks = kSpring;
 	Kd = kDamp;
 	l_0 = natLength;
-	p1 = part1;
-	p2 = part2;
 }
 
 SpringDamper::~SpringDamper()
@@ -57,15 +61,5 @@ void SpringDamper::setDampConst(float c)
 void SpringDamper::setNatLength(float length)
 {
 	l_0 = length;
-}
-
-void SpringDamper::setP1(Particle* p)
-{
-	p1 = p;
-}
-
-void SpringDamper::setP2(Particle* p)
-{
-	p2 = p;
 }
 
