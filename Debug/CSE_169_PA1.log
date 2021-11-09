@@ -1,0 +1,87 @@
+﻿  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  imgui_impl_glfw.cpp
+  imgui_impl_opengl3.cpp
+  imgui_tables.cpp
+  imgui_widgets.cpp
+  Camera.cpp
+  Cloth.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\cloth_src\Cloth.cpp(66,13): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\cloth_src\Cloth.cpp(276,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\cloth_src\Cloth.cpp(279,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\cloth_src\Cloth.cpp(290,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\cloth_src\Cloth.cpp(399,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\cloth_src\Cloth.cpp(407,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\cloth_src\Cloth.cpp(417,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\cloth_src\Cloth.cpp(433,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\cloth_src\Cloth.cpp(590,13): warning C4305: '=': truncation from 'double' to 'float'
+  SpringDamper.cpp
+  Triangle.cpp
+  FloorTile.cpp
+  main.cpp
+  Mesh.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Mesh.cpp(17,20): warning C4018: '<': signed/unsigned mismatch
+  Model.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Model.cpp(22,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Model.cpp(26,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Model.cpp(38,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Model.cpp(61,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Model.cpp(63,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Model.cpp(81,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Model.cpp(86,21): warning C4018: '<': signed/unsigned mismatch
+  Particle.cpp
+  ParticleSys.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\particle_sys_src\ParticleSys.cpp(21,11): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\particle_sys_src\ParticleSys.cpp(139,20): warning C4018: '<': signed/unsigned mismatch
+  AnimationClip.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\AnimationClip.cpp(11,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\AnimationClip.cpp(47,23): warning C4018: '<': signed/unsigned mismatch
+  AnimationPlayer.cpp
+  Channel.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Channel.cpp(31,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Channel.cpp(41,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Channel.cpp(86,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Channel.cpp(154,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Channel.cpp(185,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Channel.cpp(213,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Channel.cpp(260,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Channel.cpp(291,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Channel.cpp(321,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Channel.cpp(357,20): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
+  Compiling...
+  Cube.cpp
+  Dof.cpp
+  Joint.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Joint.cpp(24,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Joint.cpp(28,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Joint.cpp(74,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Joint.cpp(167,20): warning C4018: '<': signed/unsigned mismatch
+  Keyframe.cpp
+  Skeleton.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Skeleton.cpp(58,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Skeleton.cpp(97,27): warning C4018: '<': signed/unsigned mismatch
+  Skin.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Skin.cpp(69,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Skin.cpp(74,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Skin.cpp(77,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Skin.cpp(252,23): warning C4018: '<': signed/unsigned mismatch
+  Vertex.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Vertex.cpp(11,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\rigging_src\Vertex.cpp(12,27): warning C4018: '<': signed/unsigned mismatch
+  shader.cpp
+  Tokenizer.cpp
+  Window.cpp
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Window.cpp(61,15): warning C4244: '=': conversion from 'clock_t' to 'float', possible loss of data
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Window.cpp(175,14): warning C4244: 'initializing': conversion from 'clock_t' to 'float', possible loss of data
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\src\Window.cpp(188,34): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
+  Generating Code...
+Model.obj : error LNK2019: unresolved external symbol "public: __thiscall Assimp::Importer::Importer(void)" (??0Importer@Assimp@@QAE@XZ) referenced in function "private: void __thiscall Model::loadModel(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?loadModel@Model@@AAEXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+Model.obj : error LNK2019: unresolved external symbol "public: __thiscall Assimp::Importer::~Importer(void)" (??1Importer@Assimp@@QAE@XZ) referenced in function "private: void __thiscall Model::loadModel(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?loadModel@Model@@AAEXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+Model.obj : error LNK2019: unresolved external symbol "public: struct aiScene const * __thiscall Assimp::Importer::ReadFile(char const *,unsigned int)" (?ReadFile@Importer@Assimp@@QAEPBUaiScene@@PBDI@Z) referenced in function "public: struct aiScene const * __thiscall Assimp::Importer::ReadFile(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,unsigned int)" (?ReadFile@Importer@Assimp@@QAEPBUaiScene@@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@I@Z)
+Model.obj : error LNK2019: unresolved external symbol "public: char const * __thiscall Assimp::Importer::GetErrorString(void)const " (?GetErrorString@Importer@Assimp@@QBEPBDXZ) referenced in function "private: void __thiscall Model::loadModel(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?loadModel@Model@@AAEXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+Model.obj : error LNK2019: unresolved external symbol _aiGetMaterialTextureCount referenced in function "public: unsigned int __thiscall aiMaterial::GetTextureCount(enum aiTextureType)const " (?GetTextureCount@aiMaterial@@QBEIW4aiTextureType@@@Z)
+Model.obj : error LNK2019: unresolved external symbol _aiGetMaterialTexture referenced in function "public: enum aiReturn __thiscall aiMaterial::GetTexture(enum aiTextureType,unsigned int,struct aiString *,enum aiTextureMapping *,unsigned int *,float *,enum aiTextureOp *,enum aiTextureMapMode *)const " (?GetTexture@aiMaterial@@QBE?AW4aiReturn@@W4aiTextureType@@IPAUaiString@@PAW4aiTextureMapping@@PAIPAMPAW4aiTextureOp@@PAW4aiTextureMapMode@@@Z)
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\packages\assimp\lib\assimp-vc142-mtd.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'x86'
+C:\Users\Xavie\OneDrive\Desktop\Winter 2021\CSE 169\169 Starter\Debug\CSE_169_PA1.exe : fatal error LNK1120: 6 unresolved externals
