@@ -13,7 +13,7 @@ private:
 	glm::vec3 color;
 
 	Skeleton* skel;
-
+	Shader renderProg; // skin render program
 	glm::mat4 model;
 	// Vertex Information
 	std::vector<glm::vec3> position;
@@ -31,12 +31,14 @@ public:
 
 	glm::mat4 getModelMat();
 
-	// Takes in a '.skin' and '.skel' file to parse
-	Skin(const char* skinFileName, const char* skelFileName);
+	// Parses in a '.skin' and '.skel' file data  
+	Skin(const char* skinFileName = "src/animations/wasp/wasp.skin", const char* skelFileName = "src/animations/wasp/wasp.skel");
 
+	// Deletes a pointer to the skeleton object
 	~Skin();
 
-	void Draw(const glm::mat4& viewProjMtx, GLuint shader, GLFWwindow* window);
+	void Draw(const glm::mat4& viewProjMtx, GLFWwindow* window);
+
 	void Update(glm::mat4 topMatrix);
 
 	void spin(float deg);

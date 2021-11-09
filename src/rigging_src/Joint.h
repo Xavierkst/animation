@@ -30,12 +30,11 @@ private:
 	std::string jointName;
 
 	int idx; 
-	
+
 public:
 	// constructor & destructor
 	Joint(); // default constructor
 	~Joint();
-
 
 	// GETTERS ---------------------------------------------
 	std::string getJointName(); 
@@ -70,7 +69,7 @@ public:
 
 	// OTHERS ---------------------------------------------
 
-	// Pass in a tokenzier object
+	// Pass in a tokenzier object 
 	// creates the cube and initializes them
 	// accordingly with each balljoint
 	// read in

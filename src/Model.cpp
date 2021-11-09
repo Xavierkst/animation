@@ -47,7 +47,9 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 			v.normal.z = mesh->mNormals[i].z;
 		}
 
-		if (mesh->HasTextureCoords()) {
+		// each mesh can have many texture coordinates, 
+		// but if we assume they only have 1, we can use just that one 
+		if (mesh->mTextureCoords[0]) {
 			v.texCoord.x = mesh->mTextureCoords[i]->x;
 			v.texCoord.y = mesh->mTextureCoords[i]->y;
 		}

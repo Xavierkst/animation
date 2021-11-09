@@ -7,10 +7,10 @@ glm::mat4 Skin::getModelMat()
 
 Skin::Skin(const char* skinFileName, const char* skelFileName)
 {
+    renderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
 	// Model matrix.
 	model = glm::mat4(1.0f);
 
-	// The color of the cube. Try setting it to something else!
 	color = glm::vec3(202.0f/255.0f, 247.0f/255.0f, 227.0f/255.0f);
 
 	// Generate a vertex array (VAO) and two vertex buffer objects (VBO).
@@ -19,8 +19,7 @@ Skin::Skin(const char* skinFileName, const char* skelFileName)
 	glGenBuffers(1, &VBO_normals);
 
     // Load the skeleton and skin files
-    skel = new Skeleton();
-    skel->Load(skelFileName);
+    skel = new Skeleton(skelFileName);
     this->Load(skinFileName);
 }
 
@@ -35,15 +34,16 @@ Skin::~Skin()
 	glDeleteVertexArrays(1, &VAO);
 }
 
-void Skin::Draw(const glm::mat4& viewProjMtx, GLuint shader, GLFWwindow* window)
+void Skin::Draw(const glm::mat4& viewProjMtx, GLFWwindow* window)
 {
 	// actiavte the shader program 
-	glUseProgram(shader);
+	// glUseProgram(renderProg.ID);
+    renderProg.use();
 
 	// get the locations and send the uniforms to the shader 
-	glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, (float*)&viewProjMtx);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, (float*)&model);
-	glUniform3fv(glGetUniformLocation(shader, "DiffuseColor"), 1, &color[0]);
+    renderProg.setMat4("viewProj", viewProjMtx);
+    renderProg.setMat4("model", model);
+    renderProg.setVec3("DiffuseColor", color);
 
 	// Bind the VAO
 	glBindVertexArray(VAO);
@@ -69,7 +69,7 @@ void Skin::Update(glm::mat4 topMatrix)
     for (int k = 0; k < invBindings.size(); k++) {
         M.push_back(this->getWorldMatrix(k) * invBindings[k]);
     }
-    
+ 
     // compute the skinning matrix M and update v and n 
     for (int i = 0; i < position.size(); i++) {
         glm::vec3 updatedVertex(.0f);
@@ -88,9 +88,9 @@ void Skin::Update(glm::mat4 topMatrix)
         new_position[i] = updatedVertex;
         new_normal[i] = updatedNormal;
     }
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO_positions);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * new_position.size(), new_position.data(), GL_DYNAMIC_DRAW);
-
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO_normals);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * new_normal.size(), new_normal.data(), GL_DYNAMIC_DRAW);

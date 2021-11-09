@@ -1,8 +1,10 @@
 #include "Skeleton.h"
 
-Skeleton::Skeleton()
+Skeleton::Skeleton(const char* fileName)
 {
+    renderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
     root = nullptr;
+    Load(fileName);
 }
 
 Skeleton::~Skeleton()
@@ -48,9 +50,9 @@ void Skeleton::Update(glm::mat4& parent)
     root->Update(trans * parent);
 }
 
-void Skeleton::Draw(const glm::mat4& viewProjMtx, GLuint shader)
+void Skeleton::Draw(const glm::mat4& viewProjMtx)
 {
-    root->Draw(viewProjMtx, shader);
+    root->Draw(viewProjMtx, renderProg.ID);
 }
 
 Dof* Skeleton::getNextDof(int& idx)
