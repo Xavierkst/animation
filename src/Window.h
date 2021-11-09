@@ -13,6 +13,7 @@
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_impl_glfw.h"
 #include "../imgui/imgui_impl_opengl3.h"
+#include <memory>
 ////////////////////////////////////////////////////////////////////////////////
 
 class Window
@@ -24,13 +25,13 @@ public:
 	static const char* windowTitle;
 
 	// Objects to render
-	static Cube* cube;
-	static Skin* skin;
-	static AnimationPlayer* player;
-	static AnimationClip* clip;
-	static Cloth* cloth;
-	static FloorTile* the_floor;
-	static ParticleSys* particle_sys;
+	static std::unique_ptr<Cube> cube; // static Cube* cube;
+	static std::unique_ptr<Skin> Window::skin; // static Skin* skin;
+	static std::unique_ptr<AnimationPlayer> Window::player;
+	static std::unique_ptr<AnimationClip> Window::clip;
+	static std::unique_ptr<Cloth> cloth;
+	static std::unique_ptr<FloorTile> Window::the_floor;
+	static std::unique_ptr<ParticleSys> particle_sys;
 
 	// Shader Program 
 	static GLuint shaderProgram;
@@ -49,8 +50,9 @@ public:
 	static void idleCallback();
 	static void displayCallback(GLFWwindow*);
 
-	// helper to reset the camera
-	static void resetCamera();
+	// for Camera
+	static std::unique_ptr<Camera> Cam;
+	static void resetCamera(); // helper to reset the camera
 
 	// callbacks - for interaction
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);

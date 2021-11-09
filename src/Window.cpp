@@ -3,7 +3,6 @@
 ////////////////////////////////////////
 
 #include "Window.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Window Properties */
@@ -12,62 +11,55 @@ int Window::height;
 const char* Window::windowTitle = "Viewport";
 
 /* Objects to render */
-Cube * Window::cube;
-Skin* Window::skin;
-AnimationClip* Window::clip;
-AnimationPlayer* Window::player;
+std::unique_ptr<Cube> Window::cube;
+std::unique_ptr<Skin> Window::skin;
+std::unique_ptr<AnimationClip> Window::clip;
+std::unique_ptr<AnimationPlayer> Window::player;
+std::unique_ptr<ParticleSys> Window::particle_sys; // Particle System
+std::unique_ptr<Camera> Window::Cam;
+
 const char* computeShaderPath;
 float time1, time2;
 
 /* Cloth variables */
-Cloth* Window::cloth;
+std::unique_ptr<Cloth> Window::cloth;
 float clothMass;
 
 /* Floor Quad variables */
-FloorTile* Window::the_floor;
+std::unique_ptr<FloorTile> Window::the_floor;
 int fSize; // floorSize
 
-/* Camera Properties */
-Camera* Cam;
 
 /* Interaction Variables */
 bool LeftDown, RightDown;
 int MouseX, MouseY;
 
-/* Shader program id */
-GLuint Window::shaderProgram;
-Shader windowShaderProg;
-
-/* Particle System */
-ParticleSys* Window::particle_sys;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // Constructors and desctructors 
 bool Window::initializeProgram() {
-
 	return true;
 }
 
 bool Window::initializeObjects()
 {
 	// Create a skin and its skeleton, pass in files for parsing
-	skin = new Skin("src/animations/wasp/wasp.skin", "src/animations/wasp/wasp.skel");
-	// clip = new AnimationClip();
-	// clip->Load("src/animations/wasp/wasp_walk.anim");
-	// player = new AnimationPlayer(clip, skin->getSkeleton());
+	// skin = std::make_unique<Skin>();
+	// clip = std::make_unique<AnimationClip>();
+	// clip->Load("src/animations/wasp/wasp_walk.anim"); // load the wasp animation
+	// player = std::make_unique<AnimationPlayer>(clip.get(), skin->getSkeleton());
 
 	// Time initializer (to calculate dt in idleCallBack())
 	time1 = clock();
 
 	// Cloth
-	cloth = new Cloth();
+	cloth = std::make_unique<Cloth>();
 
 	// Floor tile
-	the_floor = new FloorTile();
+	the_floor = std::make_unique<FloorTile>();
 
 	// Particle system
-	particle_sys = new ParticleSys(10000);
+	// particle_sys = std::make_unique<ParticleSys>(10000);
 
 	return true;
 }
@@ -75,9 +67,6 @@ bool Window::initializeObjects()
 void Window::cleanUp()
 {
 	Window::imguiCleanUp();
-	delete skin; // skin has skeleton destructor
-	delete particle_sys;
-	delete cloth;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +125,9 @@ GLFWwindow* Window::createWindow(int width, int height)
 	glfwSwapInterval(0);
 
 	// set up the camera
-	Cam = new Camera();
+	Cam = std::make_unique<Camera>();
+	// Cam = new Camera();
+	// Cam = new Camera;
 	Cam->SetAspect(float(width) / float(height));
 
 	// initialize the interaction variables
@@ -168,33 +159,31 @@ void Window::resizeCallback(GLFWwindow* window, int width, int height)
 // update and draw functions
 void Window::idleCallback()
 {
-	// Perform any updates as necessary. 
 	Cam->Update();
-
+	
 	// Calculate time step
 	float new_t = clock();
 	float dt = (new_t - time1);
 	time1 = new_t;
 
+	// skin->Update(glm::mat4(1.0f));
+	// player->Update(dt / CLOCKS_PER_SEC);
+
 	// Update Cloth vertices each frame
-	// tot_steps = 60 by default
-	// (CLOCKS_PER_SEC * tot_steps)
-	cloth->Update(the_floor, dt);
+	cloth->Update(the_floor.get(), dt);
 }
 
 void Window::displayCallback(GLFWwindow* window)
 {	
 	// Clear the color and depth buffers.
 	glClearColor(.05, .05, .05, 1.0f); // background color 
-	// glClearColor(.0f, .0f, .0f, 1.0f); // background color 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
 	// Render skin
-	// skin->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
-	// skin->getSkeleton()->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram);
+	// skin->Draw(Cam->GetViewProjectMtx(), window);
+	// skin->getSkeleton()->Draw(Cam->GetViewProjectMtx());
 
 	the_floor->Draw(Cam->getCamPos(), Cam->GetViewProjectMtx());
-
 	cloth->Draw(Cam->getCamPos(),Cam->GetViewProjectMtx(), window);
 
 	//particle_sys->Draw(Cam->GetViewProjectMtx(), Window::shaderProgram, window);
