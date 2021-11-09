@@ -129,7 +129,7 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 			float natLength = glm::length(point1->getPos() - point2->getPos());
 			// Ks, Kd, spr_nat_length, * p1, * p2
 			// springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
-			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
+			springs.push_back(std::make_unique<SpringDamper>(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
 		}
 	}
@@ -140,7 +140,7 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]);
 			std::shared_ptr<Particle> point2(particles[((i + 1) * nParticles.x) + j]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
-			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
+			springs.push_back(std::make_unique<SpringDamper>(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
 		}
 	}
@@ -151,7 +151,7 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]);
 			std::shared_ptr<Particle> point2(particles[((i + 1) * nParticles.x) + j + 1]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
-			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
+			springs.push_back(std::make_unique<SpringDamper>(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
 		}
 	}
@@ -162,7 +162,7 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]); 
 			std::shared_ptr<Particle> point2(particles[((i + 1) * nParticles.x) + j - 1]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
-			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
+			springs.push_back(std::make_unique<SpringDamper>(springConst, dampConst, natLength, point1, point2));
 			//spring_iter++;
 		}
 	}
@@ -173,7 +173,7 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]); 
 			std::shared_ptr<Particle> point2(particles[(i * nParticles.x) + j + 2]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
-			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
+			springs.push_back(std::make_unique<SpringDamper>(springConst, dampConst, natLength, point1, point2));
 		}
 	}
 
@@ -183,7 +183,7 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 			std::shared_ptr<Particle> point1(particles[(i * nParticles.x) + j]); 
 			std::shared_ptr<Particle> point2(particles[((i+2) * nParticles.x) + j]);
 			float natLength = glm::length(point1->getPos() - point2->getPos());
-			springs.push_back(new SpringDamper(springConst, dampConst, natLength, point1, point2));
+			springs.push_back(std::make_unique<SpringDamper>(springConst, dampConst, natLength, point1, point2));
 		}
 	}
 	// All springs have been linked up at this point
@@ -222,9 +222,6 @@ Cloth::Cloth(const char* computeShaderPath, const char* diffuseTexPath, const ch
 	clothTexture[0] = loadTexture(diffuseTexPath);
 	clothTexture[1] = loadTexture(specularTexPath);
 	// clothTexture[0] = loadTexture("src/textures/bladeRunner.jpg");
-	// clothTexture[0] = loadTexture("src/textures/awesomeface.png");
-	// clothTexture[0] = loadTexture("src/textures/leatherDiamond/Leather_Diamond_Patches_002_basecolor.jpg");
-	// clothTexture[1] = loadTexture("src/textures/leatherDiamond/Leather_Diamond_Patches_002_metallic.jpg");
 
 	renderProg.use();
 	renderProg.setInt("material.texture_diffuse1", 0);
@@ -274,9 +271,9 @@ Cloth::~Cloth()
 {
 	// Springs class doesn't delete both particles connected to it
 	// Need to iterate thru particles arr to delete them 
-	for (int k = 0; k < springs.size(); k++) {
-		delete springs[k];
-	}
+	//for (int k = 0; k < springs.size(); k++) {
+	//	delete springs[k];
+	//}
 	// for (int i = 0; i < particles.size(); ++i) {
 	// 	delete particles[i];
 	// }

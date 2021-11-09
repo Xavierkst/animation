@@ -7,21 +7,14 @@
 class Triangle {
 private:
 	std::vector<int> triVerts;
-
-	// Particle* p1;
-	// Particle* p2;
-	// Particle* p3;
 	std::shared_ptr<Particle> p1;
 	std::shared_ptr<Particle> p2;
 	std::shared_ptr<Particle> p3;
+
 	glm::vec3 normal;
 	glm::vec3 vSurface;
 
 public:
-	// Triangle constructor 
-	Triangle();
-	
-	// Triangle(Particle* part1, Particle* part2, Particle* part3);
 	Triangle(std::shared_ptr<Particle> part1, 
 		std::shared_ptr<Particle> part2, 
 		std::shared_ptr<Particle> part3);

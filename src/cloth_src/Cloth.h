@@ -13,7 +13,8 @@
 
 class Cloth {
 private:
-	
+
+    // Shaders, Buffer Objects, Vertex arrays ------------------------------
 	Shader renderProg; // Cloth rendering shader program
 	GLuint clothVAO; 
 	GLuint clothVBO;
@@ -24,19 +25,22 @@ private:
 	glm::mat4 model; // cloth model transform 
 	glm::mat4 transfMat; // keeps track of all translations on the cloth 
 
-	/* Physical constants */
+    // Physical Constants --------------------------------------------------	
 	glm::vec3 vAir; // air velocity
 	float springConst, dampConst; 
 	float rho, Cd, rest_const, dynamic_fric; 
 	
-	// Cloth has an array of Particles, Triangles, and springs
-
-	// std::vector<Particle*> particles;
-	std::vector<std::shared_ptr<Particle>> particles;
-	std::vector<SpringDamper*> springs;
+	// Particles, Triangles, and springs -----------------------------------
+	std::vector<std::shared_ptr<Particle>> particles; 
+	std::vector<std::unique_ptr<SpringDamper>> springs;
 	std::vector<Triangle> triangles; // triangle vector	
 	std::vector<int> triIndices; // Indices for the EBO 
-	std::vector<Vertex> vertices; // contains Position, Normal, texCoord
+	std::vector<Vertex> vertices; // contains Position, Normal, texCoord for VBO  
+
+	// For Rendering Light Cubes in the scene -- not actually part of cloth
+	Shader lightRenderProg;
+	GLuint lightSourcePos;
+	GLuint lightSourceVAO;
 
 	// Compute shader variables -- NOT IN USE -- 
 	Shader computeProg; // compute shader program
@@ -51,13 +55,7 @@ private:
 	GLuint computeShaderID;
 	int readBuf; // toggles bet 1 and 0 to swap computed vertices from comp shader
 
-	// For Rendering Light Cubes in the scene -- not actually part of cloth
-	Shader lightRenderProg;
-	GLuint lightSourcePos;
-	GLuint lightSourceVAO;
-
 public:
-
 	Cloth(const char* computeShaderPath = "src/shaders/clothCompute.comp", 
 		const char* diffuseTexPath = "src/textures/blueDenim/Blue_Denim_Texture_DIFFUSE.png", 
 		const char* specularTexPath = "src/textures/blueDenim/Blue_Denim_Texture_SPECULAR.png");
@@ -81,7 +79,6 @@ public:
 	void spin(float deg);
 
 	unsigned int loadTexture(char const* path);
-
 
 	/* --------------  Compute shader functions -- NOT IN USE ----------------- */ 
 

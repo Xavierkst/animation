@@ -9,8 +9,6 @@ SpringDamper::SpringDamper()
 	p2 = nullptr;
 }
 
-// SpringDamper::SpringDamper(float kSpring, float kDamp, float natLength, Particle* part1, Particle* part2)
-
 SpringDamper::SpringDamper(float kSpring, float kDamp, float natLength, 
 	std::shared_ptr<Particle> part1, 
 	std::shared_ptr<Particle> part2)
@@ -20,10 +18,6 @@ SpringDamper::SpringDamper(float kSpring, float kDamp, float natLength,
 	Ks = kSpring;
 	Kd = kDamp;
 	l_0 = natLength;
-}
-
-SpringDamper::~SpringDamper()
-{
 }
 
 void SpringDamper::computeForce()

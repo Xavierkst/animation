@@ -13,9 +13,8 @@ private:
 	std::shared_ptr<Particle> p1;
 	std::shared_ptr<Particle> p2;
 public:
-	
 	SpringDamper();
-	// SpringDamper(float kSpring, float kDamp, float natLength, Particle* part1, Particle* part2);
+
 	SpringDamper(float kSpring, float kDamp, float natLength, 
 		std::shared_ptr<Particle> part1, 
 		std::shared_ptr<Particle> part2);
