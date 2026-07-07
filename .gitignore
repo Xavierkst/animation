@@ -1,0 +1,13 @@
+.vs/
+packages/
+Release/
+CppProperties.json
+CMakeLists.txt
+*.vcxproj.user
+build/
+x64/
+imgui.ini
+imgui/
+packages.config
+stb_image/
+Libraries/
