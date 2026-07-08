@@ -1,12 +1,8 @@
-////////////////////////////////////////
-// Tokenizer.h
-////////////////////////////////////////
+#ifndef TOKENIZER_H
+#define TOKENIZER_H
 
-#pragma once
-
-#include "core.h"
-
-////////////////////////////////////////////////////////////////////////////////
+#include <string>
+#include <stdio.h>
 
 // The Tokenizer class for reading simple ascii data files. The GetToken function
 // just grabs tokens separated by whitespace, but the GetInt and GetFloat functions
@@ -22,7 +18,6 @@ public:
 
 	bool Open(const char *file);
 	bool Close();
-
 	bool Abort(char *error);	// Prints error & closes file, and always returns false
 
 	// Tokenization
@@ -37,8 +32,8 @@ public:
 	bool Reset();
 
 	// Access functions
-	char *GetFileName()			{return FileName;}
-	int GetLineNum()			{return LineNum;}
+	char *GetFileName();
+	int GetLineNum();
 
 private:
 	void *File;
@@ -46,4 +41,4 @@ private:
 	int LineNum;
 };
 
-////////////////////////////////////////////////////////////////////////////////
+#endif // TOKENIZER_H

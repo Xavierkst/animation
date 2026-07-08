@@ -1,12 +1,6 @@
-////////////////////////////////////////
-// Tokenizer.cpp
-////////////////////////////////////////
-
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "Tokenizer.h"
-
-////////////////////////////////////////////////////////////////////////////////
 
 Tokenizer::Tokenizer() {
 	File=0;
@@ -14,16 +8,12 @@ Tokenizer::Tokenizer() {
 	strcpy(FileName,"");
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 Tokenizer::~Tokenizer() {
 	if(File) {
 		printf("ERROR: Tokenizer::~Tokenizer()- Closing file '%s'\n",FileName);
 		fclose((FILE*)File);
 	}
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 bool Tokenizer::Open(const char *fname) {
 	File=(void*)fopen(fname,"r");
@@ -36,8 +26,6 @@ bool Tokenizer::Open(const char *fname) {
 	return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 bool Tokenizer::Close() {
 	if(File) fclose((FILE*)File);
 	else return false;
@@ -46,15 +34,11 @@ bool Tokenizer::Close() {
 	return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 bool Tokenizer::Abort(char *error) {
 	printf("ERROR '%s' line %d: %s\n",FileName,LineNum,error);
 	Close();
 	return false;
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 char Tokenizer::GetChar() {
 	char c=char(getc((FILE*)File));
@@ -62,15 +46,11 @@ char Tokenizer::GetChar() {
 	return c;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 char Tokenizer::CheckChar() {
 	int c=getc((FILE*)File);
 	ungetc(c,(FILE*)File);
 	return char(c);
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 int Tokenizer::GetInt() {
 	SkipWhitespace();
@@ -96,8 +76,6 @@ int Tokenizer::GetInt() {
 	temp[pos++]='\0';
 	return atoi(temp);
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 // BUG: can't parse ".2", "f", or "F"
 // Uses: [-]I[.[I]][(e|E)[+|-]I]
@@ -149,8 +127,6 @@ float Tokenizer::GetFloat() {
 	return float(atof(temp));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 bool Tokenizer::GetToken(char *str) {
 	SkipWhitespace();
 
@@ -164,8 +140,6 @@ bool Tokenizer::GetToken(char *str) {
 	return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 bool Tokenizer::FindToken(const char *tok) {
 	int pos=0;
 	while(tok[pos]!='\0') {
@@ -176,8 +150,6 @@ bool Tokenizer::FindToken(const char *tok) {
 	}
 	return true;
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 bool Tokenizer::SkipWhitespace() {
 	char c=CheckChar();
@@ -190,8 +162,6 @@ bool Tokenizer::SkipWhitespace() {
 	return white;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 bool Tokenizer::SkipLine() {
 	char c=GetChar();
 	while(c!='\n') {
@@ -201,11 +171,15 @@ bool Tokenizer::SkipLine() {
 	return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 bool Tokenizer::Reset() {
 	if(fseek((FILE*)File,0,SEEK_SET)) return false;
 	return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+char* Tokenizer::GetFileName() { 
+	return FileName;
+}
+
+int Tokenizer::GetLineNum() { 
+	return LineNum;
+}

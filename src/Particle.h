@@ -1,25 +1,13 @@
-#ifndef _PARTICLE_H_
-#define _PARTICLE_H_ 
+#ifndef PARTICLE_H
+#define PARTICLE_H 
 
-#include "core.h"
+#include <glm/glm.hpp>
 
 class Particle {
-private:
-	glm::vec3 force;
-	glm::vec3 velo;
-	glm::vec3 pos;
-	glm::vec3 normal;
-	float mass; 
-	float lifeSpan;
-	bool force_apply;
-
 public:
 	Particle();
-
 	Particle(glm::vec3 f, glm::vec3 v, glm::vec3 p, glm::vec3 norm, float m);
-
 	void applyForce(glm::vec3& f);
-
 	glm::vec3 integrateMotion(float delta_t); 
 
 	// setters
@@ -41,6 +29,14 @@ public:
 	bool getForceApply(); 
 	float getLifeSpan(); 
 
+private:
+	glm::vec3 force;
+	glm::vec3 velo;
+	glm::vec3 pos;
+	glm::vec3 normal;
+	float mass; 
+	float lifeSpan;
+	bool force_apply;
 };
 
-#endif
+#endif // PARTICLE_H

@@ -2,7 +2,7 @@
 
 FloorTile::FloorTile(int floor_size)
 {	
-	renderProg.LoadShaders("src/shaders/shader.vert", "src/shaders/shader.frag");
+	renderProg = std::make_shared<Shader>("src/shaders/shader.vert", "src/shaders/shader.frag");
 	floorSize = floor_size;
 	color = glm::vec3(0.5f, 0.5f, 0.5f);
 	model = glm::mat4(1.0f);
@@ -36,20 +36,20 @@ FloorTile::FloorTile(int floor_size)
 	// initialize the grid using openGL
 	// Generate a vertex array (VAO) and two vertex buffer objects (VBO).
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO_pos);
-	glGenBuffers(1, &VBO_normals);
+	glGenBuffers(1, &VBOPos);
+	glGenBuffers(1, &VBONormals);
 
 	// Bind to the VAO.
 	glBindVertexArray(VAO);
 
 	// Bind to the first VBO - We will use it to store the vertices
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOPos);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pos.size(), pos.data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
 	// Bind the 2nd VBO - Used to store normals
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_normals); 
+	glBindBuffer(GL_ARRAY_BUFFER, VBONormals); 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), normals.data(), GL_STATIC_DRAW); 
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
@@ -66,7 +66,7 @@ FloorTile::FloorTile(int floor_size)
 
 FloorTile::~FloorTile()
 {
-	glDeleteProgram(renderProg.ID);
+	glDeleteProgram(renderProg->ID);
 }
 
 float FloorTile::getYPos()
@@ -77,12 +77,12 @@ float FloorTile::getYPos()
 void FloorTile::Draw(const glm::vec3& camPos, const glm::mat4& viewProjMtx)
 {
 	// actiavte the shader program 
-	renderProg.use();
+	renderProg->use();
 
 	// get the locations and send the uniforms to the shader 
-	renderProg.setMat4("model", this->model);
-	renderProg.setMat4("viewProj", viewProjMtx);
-	renderProg.setVec3("DiffuseColor", color);
+	renderProg->setMat4("model", this->model);
+	renderProg->setMat4("viewProj", viewProjMtx);
+	renderProg->setVec3("DiffuseColor", color);
 	// glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, (float*)&viewProjMtx);
 	// glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, (float*)&model);
 	// glUniform3fv(glGetUniformLocation(shader, "DiffuseColor"), 1, &color[0]);
