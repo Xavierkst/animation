@@ -1,5 +1,10 @@
-#include "shader.h"
+#include <iostream>
+#include <sstream>
+#include <fstream>
+
 #include <glad/glad.h>
+
+#include "shader.h"
 
 Shader::Shader(const char* compShaderPath) {
 	std::string cShaderCode;

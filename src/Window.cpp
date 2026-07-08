@@ -1,9 +1,10 @@
-////////////////////////////////////////
-// Window.cpp
-////////////////////////////////////////
-
 #include "Window.h"
-////////////////////////////////////////////////////////////////////////////////
+
+#include <time.h>
+
+#include "../imgui/imgui.h"
+#include "../imgui/imgui_impl_glfw.h"
+#include "../imgui/imgui_impl_opengl3.h"
 
 /* Window Properties */
 int Window::width;
@@ -74,10 +75,9 @@ void Window::cleanUp()
 // for the Window
 GLFWwindow* Window::createWindow(int width, int height)
 {
-	// Initialize GLFW.
-	if (!glfwInit())
-	{
-		std::cerr << "Failed to initialize GLFW" << std::endl;
+	// Initialize GLAD.
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		std::cout << "Failed to initialize GLAD" << std::endl;
 		return NULL;
 	}
 
@@ -88,8 +88,8 @@ GLFWwindow* Window::createWindow(int width, int height)
 	// Apple implements its own version of OpenGL and requires special treatments
 	// to make it uses modern OpenGL.
 
-	// Ensure that minimum OpenGL version is 3.3
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	// Ensure that minimum OpenGL version is 4.3
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	// Enable forward compatibility and allow a modern OpenGL context
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -109,17 +109,6 @@ GLFWwindow* Window::createWindow(int width, int height)
 
 	// Make the context of the window.
 	glfwMakeContextCurrent(window);
-
-#ifndef __APPLE__
-	// On Windows and Linux, we need GLEW to provide modern OpenGL functionality.
-
-	// Initialize GLEW.
-	if (glewInit())
-	{
-		std::cerr << "Failed to initialize GLEW" << std::endl;
-		return NULL;
-	}
-#endif
 
 	// Set swap interval to 1.
 	glfwSwapInterval(0);
@@ -153,8 +142,6 @@ void Window::resizeCallback(GLFWwindow* window, int width, int height)
 
 	Cam->SetAspect(float(width) / float(height));
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 // update and draw functions
 void Window::idleCallback()
@@ -195,8 +182,6 @@ void Window::displayCallback(GLFWwindow* window)
 	glfwSwapBuffers(window);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 // helper to reset the camera
 void Window::resetCamera() 
 {
@@ -204,9 +189,6 @@ void Window::resetCamera()
 	Cam->SetAspect(float(Window::width) / float(Window::height));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-// callbacks - for Interaction 
 void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	// Check for a key press.
@@ -275,8 +257,6 @@ void Window::cursor_callback(GLFWwindow* window, double currX, double currY) {
 	MouseX = (int)currX;
 	MouseY = (int)currY;
 
-	// Move camera
-	// NOTE: this should really be part of Camera::Update()
 	if (LeftDown) {
 		const float rate = 1.0f;
 		Cam->SetAzimuth(Cam->GetAzimuth() + dx * rate);
@@ -295,5 +275,3 @@ void Window::imguiCleanUp() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
-
-////////////////////////////////////////////////////////////////////////////////

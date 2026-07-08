@@ -1,15 +1,19 @@
-#include "main.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include "../imgui/imgui.h"
+#include "../imgui/imgui_impl_glfw.h"
+#include "../imgui/imgui_impl_opengl3.h"
 
-////////////////////////////////////////////////////////////////////////////////
+#include "Window.h"
 
-void error_callback(int error, const char* description)
-{
+
+
+void error_callback(int error, const char* description) {
 	// Print error.
 	std::cerr << description << std::endl;
 }
 
-void setup_callbacks(GLFWwindow* window)
-{
+void setup_callbacks(GLFWwindow* window) {
 	// Set the error callback.
 	glfwSetErrorCallback(error_callback);
 	// Set the window resize callback.
@@ -23,8 +27,7 @@ void setup_callbacks(GLFWwindow* window)
 	glfwSetCursorPosCallback(window, Window::cursor_callback);
 }
 
-void setup_opengl_settings()
-{
+void setup_opengl_settings() {
 	// Enable depth buffering.
 	glEnable(GL_DEPTH_TEST);
 	// Related to shaders and z value comparisons for the depth buffer.
@@ -52,19 +55,19 @@ void print_versions()
 void setupImGui(GLFWwindow* window) {
     // Decide GL+GLSL versions
 #ifdef __APPLE__
-    // GL 3.2 + GLSL 150
-    const char* glsl_version = "#version 150";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
+    const char* glsl_version = "#version 450";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
 #else
-    // GL 3.0 + GLSL 130
-    const char* glsl_version = "#version 130";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
+    const char* glsl_version = "#version 450";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true); 
+    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); 
 #endif
 
    // Initialize OpenGL loader
@@ -134,7 +137,7 @@ int main(void)
 		// Main render display callback. Rendering of objects is done here.
 		Window::displayCallback(window);
 
-		//Window::imguiCallback(window);
+		// Window::imguiCallback(window);
 		// Idle callback. Updating objects, etc. can be done here.
 		Window::idleCallback();
 	}
